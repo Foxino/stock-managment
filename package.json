@@ -1,0 +1,21 @@
+{
+  "name": "stock-management",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w sqlite3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^10.1.5",
+    "electron-rebuild": "^2.3.2"
+  },
+  "dependencies": {
+    "knex": "^0.21.12",
+    "sqlite3": "^5.0.0"
+  }
+}

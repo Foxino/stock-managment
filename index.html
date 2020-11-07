@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Stock Management</title>
+    <script>
+        const electron = require("electron");
+        const ipc = electron.ipcRenderer;
+        document.addEventListener("DOMContentLoaded", ()=>{
+            ipc.send("mainWindowLoaded")
+            ipc.on("confirmation", (evt, result) => {
+                if(result){
+                    document.getElementById("loading-window").style.display = "none"
+                    document.getElementById("login-box").style.display = "block"
+                }else{
+                    document.getElementById("loading-window").innerText = "First Run Detected, Populating Database..."
+                }
+            })
+            ipc.on("firstTimeRun", () => {
+                document.getElementById("loading-window").style.display = "none"
+                document.getElementById("firstTimeWindow").style.display = "block"
+
+            })
+        })
+    </script>
+</head>
+<body>
+    <div id="loading-window" style="color: white; font-size: 32px;">
+        Loading...
+    </div>
+    <div id="firstTimeWindow" hidden>
+        First Time Setup Form
+    </div>
+    <div id="login-box" class="totalbox border" hidden>
+        <img width=205 height=205 src="img/pie.png" alt="Pie Heroes">
+  
+        <form class="loginForm" action="">
+          <input placeholder="User" type="text" required />
+          <input placeholder="Password" type="password" required />
+            <button class="loginbtn">Login</button>
+          </div>
+        </form>
+      </div>
+
+</body>
+</html>
