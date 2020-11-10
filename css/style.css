@@ -69,3 +69,51 @@ button {
 	font-size: 12px;
 	font-weight: 300;
 }
+
+.sidenav {
+	height: 100%;
+	width: 180px;
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	background-color: #111;
+	overflow-x: hidden;
+
+	font-family: "Roboto", sans-serif;
+	padding-top: 20px;
+}
+
+.sidenav a {
+	padding: 6px 8px 6px 16px;
+	text-decoration: none;
+	font-size: 25px;
+	color: #818181;
+	display: block;
+}
+
+.sidenav a:hover {
+	color: #f1f1f1;
+}
+
+.content-body {
+	position: absolute;
+	left: 20vw;
+	top: 5vh;
+	background: #fff;
+	box-shadow: 0 0 120px 0 rgba(0, 0, 0, 0.2), 0 15px 15px 0 rgba(0, 0, 0, 0.24);
+	border-radius: 25px;
+	width: 75vw;
+	height: 90vh;
+}
+.flashMessage {
+	position: absolute;
+	height: 60px;
+	width: 600px;
+	top: 10px;
+	text-align: center;
+	padding-top: 35px;
+	font-size: 22px;
+	z-index: 1;
+	color: white;
+}

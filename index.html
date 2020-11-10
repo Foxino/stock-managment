@@ -23,26 +23,103 @@
                 document.getElementById("firstTimeWindow").style.display = "block"
 
             })
+            ipc.on("flash", (evt, result) => flashCard(result.message, result.level))
+            ipc.on("login-successful",  (evt, result) => {
+                document.getElementById("login-box").style.display = "none"
+                document.getElementById("main-content").style.display = "block"
+
+            })
+            ipc.on("register", () => {
+                document.getElementById("login-box").style.display = "block"
+                document.getElementById("firstTimeWindow").style.display = "none"
+            })
         })
     </script>
 </head>
 <body>
+    <div id="flash-message" class="flashMessage" hidden>
+    </div>
     <div id="loading-window" style="color: white; font-size: 32px;">
         Loading...
     </div>
-    <div id="firstTimeWindow" hidden>
-        First Time Setup Form
+    <div id="firstTimeWindow" class="totalbox border" hidden>
+        <h2>First Time Setup</h2>
+        <h3>Create an Admin Account</h3>
+        <form id="reg">
+          <input name="user" placeholder="User" type="text" required />
+          <input name="pass" placeholder="Password" type="password" required />
+          <input name="passval" placeholder="Confirm Password" type="password" required />
+          <input type="number" name="level" value="0" hidden/>
+          <button class="loginbtn" onclick="newAccount(); return false;">Create Account</button>
+        </form>
     </div>
     <div id="login-box" class="totalbox border" hidden>
         <img width=205 height=205 src="img/pie.png" alt="Pie Heroes">
   
-        <form class="loginForm" action="">
-          <input placeholder="User" type="text" required />
-          <input placeholder="Password" type="password" required />
-            <button class="loginbtn">Login</button>
+        <form id="logInForm" class="loginForm" action="">
+          <input name="user" placeholder="User" type="text" required />
+          <input name="pass" placeholder="Password" type="password" required />
+            <button class="loginbtn" onclick="logIn(); return false;">Login</button>
           </div>
         </form>
       </div>
+      <div id="main-content" hidden>
+      <div class="sidenav">
+        <a href="#about"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
+        <a href="#services">Overview</a>
+        <a href="#clients">Ingredient</a>
+        <a href="#contact">Product</a>
+        <br><br><br>
+        <a style="background-color: red;" href="#contact">Admin Panel</a>
+      </div>
+      <div class="content-body">
+          <div id="overview">
+
+          </div>
+          <div id="add-ingrediate">
+
+          </div>
+      </div>
+    </div>
 
 </body>
+<script>
+    function newAccount(){
+        let r = document.getElementById("reg").elements;
+        let res = {};
+        for (let x = 0; x < r.length; x++) {
+            let item = r.item(x);
+            res[item.name] = item.value;
+        }
+        //password validation
+        if(res.pass === res.passval && res.pass != ""){
+            //should probably encript this later
+            ipc.send("create-user", res)
+        }else{
+            //TODO - improve this validation later
+            flashCard("Passwords do not match!", 3)
+        }
+    }
+    function logIn(){
+        let r = document.getElementById("logInForm").elements;
+        let res = {};
+        for (let x = 0; x < r.length; x++) {
+            let item = r.item(x);
+            res[item.name] = item.value;
+        }
+        let confirm = ipc.send("login", res)
+
+    }
+    function flashCard(message, level){
+        let fm = document.getElementById("flash-message");
+        fm.innerText = message
+        fm.style.display = "block"
+        if(level == 3){
+            fm.style.backgroundColor = "red"
+        }else{
+            fm.style.backgroundColor = "limegreen"
+        }
+        setTimeout(() => {  fm.style.display = "none" }, 2000);
+    }
+</script>
 </html>
