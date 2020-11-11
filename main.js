@@ -2,6 +2,12 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs')
 const databaseLocation = "./pie.db"
+const {v4 : uuidv4} = require('uuid')
+const bcrypt = require('bcrypt')
+
+const saltRounds = 10
+const system_user = "SYSTEM"
+let currentUserData = null
 let win
 
 
@@ -23,8 +29,36 @@ function createDB(){
 function firstTimeDB(db){
     // this will run all of the sql scripts to populate the database
     console.log("Populating Database...")
-    db.run('CREATE TABLE user(name text, password text, level numeric)')
+    // log table
+    db.run('CREATE TABLE log(date text, log text, userid text)')
+    
+    log("CREATING DATABASE FROM FRESH && CREATED LOG TABLE")
+    // user table
+    db.run('CREATE TABLE user(name text, password text, level numeric, id text)')
+    
+    log("CREATED USER TABLE")
+
     return true
+}
+
+function log(message){
+  let user;
+  if(currentUserData){
+    user = currentUserData.id
+  }else{
+    //system log
+    user = system_user
+  }
+  
+  let db = new sqlite3.Database(databaseLocation)
+
+  let q = `INSERT INTO log(date, log, userid) VALUES("${new Date().toISOString()}", "${message}", "${user}")`
+
+  db.run(q, (err)=>{
+    if(err){
+      console.log(err.message)
+    }
+  })
 }
 
 function checkForUsers(){
@@ -99,21 +133,32 @@ function flash(message, level){
 }
 
 function createAccount(data){
-  if(data.level == 0){
-    console.log("Creating Admin Account")
-    let db = new sqlite3.Database(databaseLocation)
+  let db = new sqlite3.Database(databaseLocation)
 
-    let q = `INSERT INTO user(name, password, level) VALUES("${data.user}", "${data.pass}", ${data.level})`
-
-    db.run(q, (err) => {
+  bcrypt.genSalt(saltRounds, (err, salt) => {
+    if(err){
+      flash(err.message, 3)
+    }
+    bcrypt.hash(data.pass, salt, (err, hash) => {
       if(err){
         flash(err.message, 3)
       }else{
-        flash("Successfully Registered Admin Account", 1)
-        win.webContents.send("register")
+        let q = `INSERT INTO user(name, password, level, id) VALUES("${data.user}", "${hash}", ${data.level}, "${uuidv4()}")`
+
+      db.run(q, (err) => {
+        if(err){
+          flash(err.message, 3)
+        }else{
+          flash("Successfully Registered Account", 1)
+          log(`USER ACCOUNT ${data.user} CREATED`)
+          win.webContents.send("register")
+        }
+      })
       }
     })
-  }
+  })
+
+
 }
 
 
@@ -129,17 +174,27 @@ function logIn(data){
     }
     if(!row){
       //no user of that name
+        let s = `FAILED LOG IN ATTEMPT - ${data.user}`
+        log(s)
       flash("Invalid Login", 3)
     }else{
-      if(row.password == data.pass){
-        //successful log in
-        let result = {"level" : row.level, "user" : row.name}
-        flash("Successful Log-In", 1)
-        win.webContents.send("login-successful", result)
-      }else{
-        //wrong password
-        flash("Invalid Login", 3)
-      }
+      bcrypt.compare(data.pass, row.password, (err, res)=>{
+        if(err){
+          flash(err.message, 3)
+        }
+        if(res){
+          let result = {"level" : row.level, "id" : row.id}
+          currentUserData = result;
+          flash("Successful Log-In", 1)
+          let s = `${data.user} HAS LOGGED IN`
+          log(s)
+          win.webContents.send("login-successful", result)
+        }else{
+          let s = `FAILED LOG IN ATTEMPT - ${data.user}`
+          log(s)
+          flash("Invalid Login", 3)
+        }
+      })
     }
 
   })

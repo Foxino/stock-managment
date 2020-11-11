@@ -8,6 +8,7 @@
     <script>
         const electron = require("electron");
         const ipc = electron.ipcRenderer;
+        var userData = null;
         document.addEventListener("DOMContentLoaded", ()=>{
             ipc.send("mainWindowLoaded")
             ipc.on("confirmation", (evt, result) => {
@@ -25,6 +26,10 @@
             })
             ipc.on("flash", (evt, result) => flashCard(result.message, result.level))
             ipc.on("login-successful",  (evt, result) => {
+                userData = result;
+                if(userData.level != 0){
+                    document.getElementById("adminPBtn").style.display = "none"
+                }
                 document.getElementById("login-box").style.display = "none"
                 document.getElementById("main-content").style.display = "block"
 
@@ -65,18 +70,23 @@
       </div>
       <div id="main-content" hidden>
       <div class="sidenav">
-        <a href="#about"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
-        <a href="#services">Overview</a>
+        <a onclick="content(1)"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
+        <a onclick="content(1)">Overview</a>
         <a href="#clients">Ingredient</a>
         <a href="#contact">Product</a>
         <br><br><br>
-        <a style="background-color: red;" href="#contact">Admin Panel</a>
+        <a onclick="content(0)"style="background-color: red;" id="adminPBtn">Admin Panel</a>
       </div>
       <div class="content-body">
-          <div id="overview">
-
+          <div class="content" id="1d">
+            <h2>Pie Heroes</h2>
           </div>
-          <div id="add-ingrediate">
+          <div class="content" id="2d" hidden>
+            asdada
+          </div>
+          <div class="content" id="0d" hidden>
+            <h2>Admin Panel</h2>
+            <button>Add New User</button>
 
           </div>
       </div>
@@ -84,6 +94,14 @@
 
 </body>
 <script>
+    function content(c){
+        let divs = document.getElementsByClassName("content");
+        for (let i = 0; i < divs.length; i++) {
+            divs[i].style.display = "none"            
+        }
+        document.getElementById(c+'d').style.display = "block"
+
+    }
     function newAccount(){
         let r = document.getElementById("reg").elements;
         let res = {};
