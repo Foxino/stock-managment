@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
-    <title>Stock Management</title>
 </head>
 <body>
     <div id="flash-message" class="flashMessage" hidden>
@@ -20,7 +19,7 @@
           <input name="pass" placeholder="Password" type="password" required />
           <input name="passval" placeholder="Confirm Password" type="password" required />
           <input type="number" name="level" value="0" hidden/>
-          <button class="loginbtn" onclick="newAccount(); return false;">Create Account</button>
+          <button class="loginbtn" onclick="newAccount('reg'); return false;">Create Account</button>
         </form>
     </div>
     <div id="login-box" class="totalbox border" hidden>
@@ -37,7 +36,8 @@
       <div class="sidenav">
         <a onclick="content(1)"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
         <a onclick="content(1)">Overview</a>
-        <a href="#clients">Ingredient</a>
+        <a href="#clients">Suppliers</a>
+        <a href="#contact">Ingredients</a>
         <a href="#contact">Product</a>
         <br><br><br>
         <a onclick="content(0)"style="background-color: red;" id="adminPBtn">Admin Panel</a>
@@ -51,7 +51,20 @@
           </div>
           <div class="content" id="0d" hidden>
             <h2>Admin Panel</h2>
-            <button>Add New User</button>
+            <h3>Create New User</h3>
+            <form id="reg2">
+
+              <input name="user" placeholder="User" type="text" required />
+              <input name="pass" placeholder="Password" type="password" required />
+              <input name="passval" placeholder="Confirm Password" type="password" required />
+              <input type="number" name="level" value="1" hidden/>
+              <button class="loginbtn" onclick="newAccount('reg2'); return false;">Create Account</button>
+
+            </form>
+            <h3>Users</h3>
+            <div id="userTable">
+              Loading User Table...
+            </div>
 
           </div>
       </div>

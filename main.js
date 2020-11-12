@@ -9,6 +9,7 @@ const saltRounds = 10
 const system_user = "SYSTEM"
 let currentUserData = null
 let win
+let newAccWin
 
 
 function createDB(){
@@ -76,11 +77,31 @@ function checkForUsers(){
   })
 }
 
+function getUserList(){
+  //generates real time userlist to populate user table
+
+  //only send data if admin
+  if(currentUserData.level == 0){
+    let db = new sqlite3.Database(databaseLocation)
+    db.all("SELECT name, level, id FROM 'user'", (err, rows) => {
+      if(!err){
+        if(rows){
+          win.webContents.send("updatedUserList", rows)
+        }
+      }
+    })
+
+  }
+}
+
 function createWindow () {
   
   win = new BrowserWindow({
     width: 1200,
     height: 800,
+    // transparency and frameless pretty cool, might add later though
+    //frame: false,
+    //transparent: true,
     webPreferences: {
       nodeIntegration: true
     }
@@ -151,6 +172,7 @@ function createAccount(data){
         }else{
           flash("Successfully Registered Account", 1)
           log(`USER ACCOUNT ${data.user} CREATED`)
+          getUserList()
           win.webContents.send("register")
         }
       })
@@ -185,6 +207,7 @@ function logIn(data){
         if(res){
           let result = {"level" : row.level, "id" : row.id}
           currentUserData = result;
+          getUserList()
           flash("Successful Log-In", 1)
           let s = `${data.user} HAS LOGGED IN`
           log(s)
