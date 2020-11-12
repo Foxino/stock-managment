@@ -5,41 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
     <title>Stock Management</title>
-    <script>
-        const electron = require("electron");
-        const ipc = electron.ipcRenderer;
-        var userData = null;
-        document.addEventListener("DOMContentLoaded", ()=>{
-            ipc.send("mainWindowLoaded")
-            ipc.on("confirmation", (evt, result) => {
-                if(result){
-                    document.getElementById("loading-window").style.display = "none"
-                    document.getElementById("login-box").style.display = "block"
-                }else{
-                    document.getElementById("loading-window").innerText = "First Run Detected, Populating Database..."
-                }
-            })
-            ipc.on("firstTimeRun", () => {
-                document.getElementById("loading-window").style.display = "none"
-                document.getElementById("firstTimeWindow").style.display = "block"
-
-            })
-            ipc.on("flash", (evt, result) => flashCard(result.message, result.level))
-            ipc.on("login-successful",  (evt, result) => {
-                userData = result;
-                if(userData.level != 0){
-                    document.getElementById("adminPBtn").style.display = "none"
-                }
-                document.getElementById("login-box").style.display = "none"
-                document.getElementById("main-content").style.display = "block"
-
-            })
-            ipc.on("register", () => {
-                document.getElementById("login-box").style.display = "block"
-                document.getElementById("firstTimeWindow").style.display = "none"
-            })
-        })
-    </script>
 </head>
 <body>
     <div id="flash-message" class="flashMessage" hidden>
@@ -91,53 +56,6 @@
           </div>
       </div>
     </div>
-
 </body>
-<script>
-    function content(c){
-        let divs = document.getElementsByClassName("content");
-        for (let i = 0; i < divs.length; i++) {
-            divs[i].style.display = "none"            
-        }
-        document.getElementById(c+'d').style.display = "block"
-
-    }
-    function newAccount(){
-        let r = document.getElementById("reg").elements;
-        let res = {};
-        for (let x = 0; x < r.length; x++) {
-            let item = r.item(x);
-            res[item.name] = item.value;
-        }
-        //password validation
-        if(res.pass === res.passval && res.pass != ""){
-            //should probably encript this later
-            ipc.send("create-user", res)
-        }else{
-            //TODO - improve this validation later
-            flashCard("Passwords do not match!", 3)
-        }
-    }
-    function logIn(){
-        let r = document.getElementById("logInForm").elements;
-        let res = {};
-        for (let x = 0; x < r.length; x++) {
-            let item = r.item(x);
-            res[item.name] = item.value;
-        }
-        let confirm = ipc.send("login", res)
-
-    }
-    function flashCard(message, level){
-        let fm = document.getElementById("flash-message");
-        fm.innerText = message
-        fm.style.display = "block"
-        if(level == 3){
-            fm.style.backgroundColor = "red"
-        }else{
-            fm.style.backgroundColor = "limegreen"
-        }
-        setTimeout(() => {  fm.style.display = "none" }, 2000);
-    }
-</script>
+<script src="js/app.js"></script>
 </html>
