@@ -60,9 +60,27 @@ function newAccount(form){
         ipc.send("create-user", res)
         f.reset()
     }else{
-        flashCard("Passwords do not match!", 3)
+        flashCard("Passwords do not match!", 2)
     }
 }
+
+function changePassword(){
+    let f = document.getElementById("pwchange")
+    let r = f.elements;
+    let res = {};
+    for (let x = 0; x < r.length; x++) {
+        let item = r.item(x);
+        res[item.name] = item.value;
+    }
+    if(res.pass === res.passval && res.pass != ""){
+        ipc.send("change-pw", res)
+        f.reset()
+    }else{
+        flashCard("Passwords do not match!", 2)
+    }
+
+}
+
 function logIn(){
     let r = document.getElementById("logInForm").elements;
     let res = {};
@@ -83,13 +101,31 @@ function flashCard(message, level){
 
 function loadUserTable(rows){
     let d = document.getElementById("userTable")
-    let table = "<table><tr><th>Username</th><th>Admin</th><th></th></tr>"
+    let table = "<table><tr><th>Username</th><th>Admin</th><th>Can Order</th><th>Can Edit/Add</th><th>Can Remove</th></tr>"
     for (let i = 0; i < rows.length; i++) {
         let admin = (rows[i].level === 0)
+        let del = ((rows[i].deleted == 1) ? "disabled" : "")
+        let delbtn = ((rows[i].deleted == 1) ? `<button onclick='editUser(0, "${rows[i].id}", "deleted")' style="background: limegreen;">✔️</button>` : `<button onclick='editUser(1, "${rows[i].id}", "deleted")' style="background: red;">❌</button>`)
         //TODO have option to give specific rights/access to non admin users
-        let btn = (admin ? '' : '<button> UPGRADE </button>')
-        table += `<tr><td>${rows[i].name}</td><td>${admin}</td><td>${btn}</td></tr>`;
+        let btn = (admin ? '' : delbtn)
+        let ord = (rows[i].ord ? 'checked' : '')
+        let edit = (rows[i].edi ? 'checked' : '')
+        let rem = (rows[i].rem ? 'checked' : '')
+        table += `<tr><td>${rows[i].name}</td>`
+        table += `<td>${admin}</td><td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "ord")' ${ord}></td>`
+        table += `<td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "edi")' ${edit}></td><td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "rem")' ${rem}></td>`
+        table += `<td>${btn}</td></tr>`;
     }
     table += "</table>"
     d.innerHTML = table
+}
+
+function editUser(checkbox, id, permission){
+    let value
+    if(checkbox === 1 | checkbox === 0){
+        value = checkbox
+    }else{
+        value = checkbox.checked
+    }
+    ipc.send("edit-user", {"id" : id, "permission" : permission, "value" : value})
 }

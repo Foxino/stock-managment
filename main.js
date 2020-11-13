@@ -35,7 +35,7 @@ function firstTimeDB(db){
     
     log("CREATING DATABASE FROM FRESH && CREATED LOG TABLE")
     // user table
-    db.run('CREATE TABLE user(name text, password text, level numeric, id text)')
+    db.run('CREATE TABLE user(name text UNIQUE, password text, level numeric, ord numeric, edi numeric, rem numeric, deleted numeric DEFAULT 0, id text)')
     
     log("CREATED USER TABLE")
 
@@ -81,9 +81,12 @@ function getUserList(){
   //generates real time userlist to populate user table
 
   //only send data if admin
+  if(!currentUserData){
+    return
+  }
   if(currentUserData.level == 0){
     let db = new sqlite3.Database(databaseLocation)
-    db.all("SELECT name, level, id FROM 'user'", (err, rows) => {
+    db.all("SELECT name, level, id, edi, rem, ord, deleted FROM 'user'", (err, rows) => {
       if(!err){
         if(rows){
           win.webContents.send("updatedUserList", rows)
@@ -133,6 +136,12 @@ function createWindow () {
     let userData = logIn(results)
     console.log(userData)
   })
+  ipcMain.on("edit-user", (evt, data) =>{
+    editUser(data)
+  })
+  ipcMain.on("change-pw", (evt, data) =>{
+    changePw(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -164,7 +173,8 @@ function createAccount(data){
       if(err){
         flash(err.message, 3)
       }else{
-        let q = `INSERT INTO user(name, password, level, id) VALUES("${data.user}", "${hash}", ${data.level}, "${uuidv4()}")`
+        let per = ((data.level==0) ? 1 : 0)
+        let q = `INSERT INTO user(name, password, level, id, ord, edi, rem) VALUES("${data.user}", "${hash}", ${data.level}, "${uuidv4()}", 1, ${per}, ${per})`
 
       db.run(q, (err) => {
         if(err){
@@ -183,6 +193,64 @@ function createAccount(data){
 
 }
 
+function editUser(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE user SET ${data.permission} = ${data.value} WHERE id = "${data.id}"`
+
+  db.run(q, (err) =>{
+    if(err){
+      flash(err.message, 3)
+    }else{
+      getUserList()
+    }
+  })
+
+}
+
+function changePw(data){
+  let db = new sqlite3.Database(databaseLocation)
+
+  let q = `SELECT * from user WHERE id = "${currentUserData.id}"`
+
+  db.get(q, (err, row)=>{
+    if(err){
+      console.log(err.message)
+    }
+    if(row){
+      bcrypt.compare(data.oldpass, row.password, (err, res)=>{
+        if(err){
+          console.log(err.message)
+        }
+        if(res){
+          bcrypt.genSalt(saltRounds, (err, salt) => {
+            if(err){
+              console.log(err.message)
+            }else{
+              bcrypt.hash(data.pass, salt, (err, hash) =>{
+                if(err){
+                  console.log(err.message)
+                }else{
+                  q = `UPDATE user SET password = "${hash}" WHERE id = "${currentUserData.id}"`
+
+                  db.run(q, (err)=>{
+                    if(err){
+                      flash(err.message, 3)
+                    }else{
+                      flash("Password changed successfully", 1)
+                    }
+                  })
+                }
+              })
+            }
+          })
+        }else{
+          flash("Cannot confirm old password", 3)
+          return
+        }
+      })
+    }
+  })
+}
 
 function logIn(data){
   
@@ -200,6 +268,10 @@ function logIn(data){
         log(s)
       flash("Invalid Login", 3)
     }else{
+      if(row.deleted === 1){
+        flash("Account has been deactivated, please contact admin.", 2)
+        return
+      }
       bcrypt.compare(data.pass, row.password, (err, res)=>{
         if(err){
           flash(err.message, 3)

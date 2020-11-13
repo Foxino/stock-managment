@@ -41,6 +41,7 @@
         <a href="#contact">Product</a>
         <br><br><br>
         <a onclick="content(0)"style="background-color: red;" id="adminPBtn">Admin Panel</a>
+        <a onclick="content(3)">User Panel</a>
       </div>
       <div class="content-body">
           <div class="content" id="1d">
@@ -66,6 +67,16 @@
               Loading User Table...
             </div>
 
+          </div>
+          <div class="content" id="3d" hidden>
+            <h2>User Panel</h2>
+            <h3>Change Password</h3>
+            <form id="pwchange">
+              <input name="oldpass" placeholder="Current Password" type="password" required /><br>
+              <input name="pass" placeholder="New Password" type="password" required /><br>
+              <input name="passval" placeholder="Confirm New Password" type="password" required /><br>
+              <button class="loginbtn" onclick="changePassword(); return false;">Change Password</button>
+            </form>
           </div>
       </div>
     </div>
