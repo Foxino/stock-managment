@@ -10,7 +10,9 @@ const system_user = "SYSTEM"
 let currentUserData = null
 let win
 let newAccWin
-
+let userSearchWord = ''
+let supplierSearchWord = ''
+let indSearchWord = ''
 
 function createDB(){
     //first run. Create a database.
@@ -31,14 +33,25 @@ function firstTimeDB(db){
     // this will run all of the sql scripts to populate the database
     console.log("Populating Database...")
     // log table
-    db.run('CREATE TABLE log(date text, log text, userid text)')
+    db.run('CREATE TABLE log(date text, log text, userid text)', (err)=>{
+      if(!err){
+        log("CREATING DATABASE FROM FRESH && CREATED LOG TABLE")
+        // user table
+        db.run('CREATE TABLE user(name text UNIQUE, password text, level numeric, ord numeric, edi numeric, rem numeric, deleted numeric DEFAULT 0, id text)')
+        
+        log("CREATED USER TABLE")
     
-    log("CREATING DATABASE FROM FRESH && CREATED LOG TABLE")
-    // user table
-    db.run('CREATE TABLE user(name text UNIQUE, password text, level numeric, ord numeric, edi numeric, rem numeric, deleted numeric DEFAULT 0, id text)')
-    
-    log("CREATED USER TABLE")
+        db.run('CREATE TABLE supplier(id text, name text UNIQUE, address text, phone text, email text, deleted numeric DEFAULT 0)')
 
+        log("CREATED supplier TABLE")
+
+        db.run('CREATE TABLE ingredient(id text, name text UNIQUE, deleted numeric DEFAULT 0)')
+
+        log("CREATED ingredient TABLE")
+      }else{
+        flash(err.message, 3)
+      }
+    })
     return true
 }
 
@@ -86,7 +99,9 @@ function getUserList(){
   }
   if(currentUserData.level == 0){
     let db = new sqlite3.Database(databaseLocation)
-    db.all("SELECT name, level, id, edi, rem, ord, deleted FROM 'user'", (err, rows) => {
+    let s = (userSearchWord != "" ? ` WHERE name LIKE "%${userSearchWord}%"` : '')
+    let q = `SELECT name, level, id, edi, rem, ord, deleted FROM 'user' ${s}  ORDER BY name ASC`
+    db.all(q, (err, rows) => {
       if(!err){
         if(rows){
           win.webContents.send("updatedUserList", rows)
@@ -134,13 +149,36 @@ function createWindow () {
   })
   ipcMain.on("login", (evt, results) => {
     let userData = logIn(results)
-    console.log(userData)
   })
   ipcMain.on("edit-user", (evt, data) =>{
     editUser(data)
   })
   ipcMain.on("change-pw", (evt, data) =>{
     changePw(data)
+  })
+  ipcMain.on("add-supplier", (evt, data) =>{
+    addSuppler(data)
+  })
+  ipcMain.on("edit-supplier", (evt, data) =>{
+    editSupplier(data)
+  })
+  ipcMain.on("user-search", (evt, data)=>{
+    userSearchWord = data
+    getUserList();
+  })
+  ipcMain.on("supplier-search", (evt, data)=>{
+    supplierSearchWord = data
+    updateSupplierTable()
+  })
+  ipcMain.on("add-ind", (evt, data)=>{
+    addInd(data)
+  })
+  ipcMain.on("edit-ind", (evt, data)=>{
+    editInd(data)
+  })
+  ipcMain.on("search-ind", (evt, data)=>{
+    indSearchWord = data
+    updateIndTable()
   })
 }
 
@@ -157,6 +195,77 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function addInd(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `INSERT INTO ingredient(id, name) VALUES ("${uuidv4()}", "${data.name}")`
+  db.run(q, (err) => {
+    if(!err){
+      updateIndTable();
+    }
+  })
+}
+
+function editInd(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE ingredient SET ${data.field} = "${data.val}" WHERE id = "${data.id}"`
+
+  db.run(q, (err) =>{
+    if(!err){
+      updateIndTable();
+    }else{
+      console.log(err.message)
+    }
+  })
+}
+
+function updateIndTable(){
+  let db = new sqlite3.Database(databaseLocation)
+  let s = (indSearchWord != "" ? ` WHERE name LIKE "%${indSearchWord}%"` : '')
+  let q = `SELECT * FROM ingredient ${s} ORDER BY name ASC`
+
+  db.all(q, (err, rows) =>{
+    if(!err){
+      win.webContents.send("updateIndTable", rows)
+    }
+  })
+}
+
+function editSupplier(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE supplier SET ${data.field} = "${data.value}" WHERE id = "${data.id}"`
+
+  db.run(q, (err)=>{
+    if(!err){
+      updateSupplierTable()
+    }
+  })
+}
+
+function addSuppler(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `INSERT INTO supplier(id, name, address, phone, email) VALUES ("${uuidv4()}", "${data.name}", "${data.address}", "${data.phone}", "${data.email}")`
+
+  db.run(q, (err) => {
+    if(err){
+      flash(err.message, 3)
+    }else{
+      updateSupplierTable()
+    }
+  })
+}
+
+function updateSupplierTable(){
+  let db = new sqlite3.Database(databaseLocation)
+  let s = (supplierSearchWord != "" ? ` WHERE name LIKE "%${supplierSearchWord}%"` : '')
+  let q = `SELECT * FROM supplier ${s} ORDER BY name ASC`
+
+  db.all(q, (err, rows) =>{
+    if(!err){
+      win.webContents.send("updatedSupplierTable", rows)
+    }
+  })
+}
 
 function flash(message, level){
   win.webContents.send("flash", {"message" : message, "level" : level})
@@ -252,6 +361,12 @@ function changePw(data){
   })
 }
 
+function initData(){
+  getUserList()
+  updateSupplierTable()
+  updateIndTable()
+}
+
 function logIn(data){
   
   let db = new sqlite3.Database(databaseLocation)
@@ -277,12 +392,12 @@ function logIn(data){
           flash(err.message, 3)
         }
         if(res){
-          let result = {"level" : row.level, "id" : row.id}
+          let result = {"level" : row.level, "id" : row.id, "removePer" : row.rem, "orderPer" : row.ord, "editPer" : row.edi}
           currentUserData = result;
-          getUserList()
           flash("Successful Log-In", 1)
           let s = `${data.user} HAS LOGGED IN`
           log(s)
+          initData()
           win.webContents.send("login-successful", result)
         }else{
           let s = `FAILED LOG IN ATTEMPT - ${data.user}`
