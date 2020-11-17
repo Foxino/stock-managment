@@ -114,11 +114,13 @@ function loadIndTable(data){
     let d = document.getElementById("IngredientTable")
     let table = "<table>"
     let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')
-    table += "<tr><th>Name</th></tr>"
+    table += "<tr><th>Name</th><th>Deactivate</th></tr>"
     for (let i = 0; i < data.length; i++) {
+        
+        let delClass = ((data[i].deleted == 1) ? "class=deact" : "")
         let editper = (((userData.level === 0 || userData.editPer === 1) && data[i].deleted === 0) ? 'contenteditable' : '')
-        let delBtn = (data[i].deleted === 0 ? `<button onclick='editInd(1, "${data[i].id}")' style="background: red;" ${removeper}>❌</button>` : `<button onclick='editInd(0, "${data[i].id}")' style="background: limegreen;" ${removeper}>✔️</button>` )
-        table += `<tr><td onfocusout='editInd(this, "${data[i].id}")' ${editper} >${data[i].name}</td><td>${delBtn}</td></tr>`
+        let delBtn = (data[i].deleted === 0 ? `<button class="btn red" onclick='editInd(1, "${data[i].id}")' ${removeper}>Deactivate</button>` : `<button class="btn green" onclick='editInd(0, "${data[i].id}")'  ${removeper}>Reinstate</button>` )
+        table += `<tr ${delClass} ><td onfocusout='editInd(this, "${data[i].id}")' ${editper} >${data[i].name}</td><td>${delBtn}</td></tr>`
     }
     table += "</table>"
     d.innerHTML = table
@@ -144,17 +146,18 @@ function searchInd(cell){
 
 function loadUserTable(rows){
     let d = document.getElementById("userTable")
-    let table = "<table><tr><th>Username</th><th>Admin</th><th>Can Order</th><th>Can Edit/Add</th><th>Can Remove</th></tr>"
+    let table = "<table><tr><th>Username</th><th>Admin</th><th>Can Order</th><th>Can Edit/Add</th><th>Can Remove</th><th>Deactivate</th></tr>"
     for (let i = 0; i < rows.length; i++) {
         let admin = (rows[i].level === 0)
         let del = ((rows[i].deleted == 1) ? "disabled" : "")
-        let delbtn = ((rows[i].deleted == 1) ? `<button onclick='editUser(0, "${rows[i].id}", "deleted")' style="background: limegreen;">✔️</button>` : `<button onclick='editUser(1, "${rows[i].id}", "deleted")' style="background: red;">❌</button>`)
+        let delClass = ((rows[i].deleted == 1) ? "class=deact" : "")
+        let delbtn = ((rows[i].deleted == 1) ? `<button onclick='editUser(0, "${rows[i].id}", "deleted")' class="btn green">Reinstate</button>` : `<button class="btn red" onclick='editUser(1, "${rows[i].id}", "deleted")' >Deactivate</button>`)
         //TODO have option to give specific rights/access to non admin users
         let btn = (admin ? '' : delbtn)
         let ord = (rows[i].ord ? 'checked' : '')
         let edit = (rows[i].edi ? 'checked' : '')
         let rem = (rows[i].rem ? 'checked' : '')
-        table += `<tr><td>${rows[i].name}</td>`
+        table += `<tr ${delClass} ><td>${rows[i].name}</td>`
         table += `<td>${admin}</td><td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "ord")' ${ord}></td>`
         table += `<td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "edi")' ${edit}></td><td><input ${del} type="checkbox" onclick='editUser(this, "${rows[i].id}", "rem")' ${rem}></td>`
         table += `<td>${btn}</td></tr>`;
@@ -166,12 +169,13 @@ function loadUserTable(rows){
 function loadSupplierTable(data){
     let d = document.getElementById("supplierTable");
     let table = `<table>`
-    table += `<tr><th>Name</th><th>Address</th><th>Phone</th><th>Email</th></tr> `
+    table += `<tr><th>Name</th><th>Address</th><th>Phone</th><th>Email</th><th>Deactivate</th></tr> `
     let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')
     for (let i = 0; i < data.length; i++) {
+        let delClass = ((data[i].deleted == 1) ? "class=deact" : "")
         let editper = (((userData.level === 0 || userData.editPer === 1) && data[i].deleted === 0) ? 'contenteditable' : '')
-        let btn = (data[i].deleted === 1 ? `<button onclick='editSupplier("${data[i].id}", 0, "deleted")' style="background: limegreen;" ${removeper}>✔️</button>` : `<button onclick='editSupplier("${data[i].id}", 1, "deleted")' style="background: red;" ${removeper}>❌</button>`)
-        table += `<tr><td onfocusout='editSupplierText(this, "${data[i].id}", "name")' ${editper}>${data[i].name}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "address")' ${editper}>${data[i].address}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "phone")' ${editper}>${data[i].phone}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "email")' ${editper}>${data[i].email}</td><td>${btn}</td></tr>`
+        let btn = (data[i].deleted === 1 ? `<button onclick='editSupplier("${data[i].id}", 0, "deleted")'class="btn green" ${removeper}>Reinstate</button>` : `<button onclick='editSupplier("${data[i].id}", 1, "deleted")' class="btn red" ${removeper}>Deactivate</button>`)
+        table += `<tr ${delClass}><td onfocusout='editSupplierText(this, "${data[i].id}", "name")' ${editper}>${data[i].name}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "address")' ${editper}>${data[i].address}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "phone")' ${editper}>${data[i].phone}</td><td onfocusout='editSupplierText(this, "${data[i].id}", "email")' ${editper}>${data[i].email}</td><td>${btn}</td></tr>`
     }
     table += `</table>`
     d.innerHTML = table
@@ -181,8 +185,13 @@ function loadSupplierTable(data){
 function addInd(){
     let r = getFromForm("ind")
     let res = r.results
-    r.form.reset();
-    ipc.send("add-ind", res)
+    if(res.name.trim().length === 0){
+        flashCard("Ingredient must have name.", 3)
+        return
+    }else{
+        r.form.reset();
+        ipc.send("add-ind", res)
+    }
 }
 
 function searchUser(input){

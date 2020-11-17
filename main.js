@@ -202,6 +202,11 @@ function addInd(data){
   db.run(q, (err) => {
     if(!err){
       updateIndTable();
+    }else{
+      if(err.errno ===19){
+        flash("Unable to add duplicate ingredient name", 3);
+        updateIndTable();
+      }
     }
   })
 }
@@ -214,7 +219,10 @@ function editInd(data){
     if(!err){
       updateIndTable();
     }else{
-      console.log(err.message)
+      if(err.errno ===19){
+        flash("Unable to add duplicate ingredient name", 3);
+      }
+      updateIndTable();
     }
   })
 }
@@ -287,7 +295,8 @@ function createAccount(data){
 
       db.run(q, (err) => {
         if(err){
-          flash(err.message, 3)
+          let errMsg = (err.errno === 19 ? "Username is taken, please select another." : err.message)
+          flash(errMsg, 3)
         }else{
           flash("Successfully Registered Account", 1)
           log(`USER ACCOUNT ${data.user} CREATED`)
