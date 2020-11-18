@@ -48,6 +48,11 @@ function firstTimeDB(db){
         db.run('CREATE TABLE ingredient(id text, name text UNIQUE, deleted numeric DEFAULT 0)')
 
         log("CREATED ingredient TABLE")
+
+        db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text, deleted numeric DEFAULT 0)')
+
+        log("CREATED stock TABLE")
+        
       }else{
         flash(err.message, 3)
       }

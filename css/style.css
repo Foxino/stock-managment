@@ -216,3 +216,39 @@ tr:nth-child(even) {
 	background: grey;
 	border-radius: 10px;
 }
+
+.bar {
+	background-color: hotpink;
+	font-size: 32px;
+}
+
+.bar:hover {
+	background-color: lawngreen;
+}
+
+.unactiv {
+	background-color: ghostwhite;
+	cursor: default;
+}
+.unactiv:hover {
+	background-color: ghostwhite;
+}
+
+.activ {
+	background-color: royalblue;
+}
+
+.activ:hover {
+	background-color: royalblue;
+}
+
+#addstockcontent {
+	height: 60vh;
+	width: 100%;
+}
+
+#addstockcontent div {
+	height: 50%;
+	width: 100%;
+	background-color: greenyellow;
+}

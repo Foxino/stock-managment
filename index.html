@@ -44,7 +44,24 @@
       <div class="content-body">
           <div class="content" id="1d">
             <h2>Pie Heroes</h2>
-          </div><div class="content" id="4d" hidden>
+            <div class="buttonBar">
+              <button id="addstock" class="btn bar" onclick="stock(this.id)">Add Stock</button>
+              <button id="addorder" class="btn bar" onclick="stock(this.id)">Add Order</button>
+              <button id="addproduct" class="btn bar" onclick="stock(this.id)">Add Product</button>
+            </div>
+            <div id="addstockcontent">
+              <div id="stock" hidden> 
+              <button onclick="cancelStock()" >X</button>
+              Hi</div>
+              <div id="order" hidden>
+              <button onclick="cancelStock()" >X</button>
+              Bye</div>
+              <div id="product" hidden>
+              <button onclick="cancelStock()" >X</button>
+              Hoi</div>
+            </div>
+          </div>
+          <div class="content" id="4d" hidden>
             <h2>Ingredients</h2>
             <form id="ind">
               <input name="name" placeholder="Name" type="text" required />

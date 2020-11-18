@@ -194,6 +194,39 @@ function addInd(){
     }
 }
 
+function stock(id){
+    console.log(id)
+    let elements = document.querySelectorAll(".bar");
+    [].forEach.call(elements, (el) => {
+        el.classList.remove("activ")
+        el.classList.add("unactiv")
+        el.disabled = true
+    })
+    document.getElementById(id).classList.add("activ")
+
+    elements = document.querySelectorAll("#addstockcontent div");
+    [].forEach.call(elements, (el)=>{
+        el.style.display = "none"
+    })
+    document.getElementById(id.replace("add","")).style.display = "block"
+
+}
+
+function cancelStock(){
+    let elements = document.querySelectorAll(".bar");
+    [].forEach.call( elements, (el)=>{
+      let e = el.classList
+      e.remove("activ")
+      e.remove("unactiv")
+      el.disabled = false  
+    })
+    
+    elements = document.querySelectorAll("#addstockcontent div");
+    [].forEach.call( elements, (el) => {
+        el.style.display = "none"
+    })
+}
+
 function searchUser(input){
     let search = input.value
     ipc.send("user-search", search)
