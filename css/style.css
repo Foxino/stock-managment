@@ -252,3 +252,10 @@ tr:nth-child(even) {
 	width: 100%;
 	background-color: greenyellow;
 }
+
+.crossBtn {
+	font-size: 28px;
+	cursor: pointer;
+	position: absolute;
+	right: 5px;
+}
