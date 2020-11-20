@@ -52,15 +52,20 @@
             <div id="addstockcontent">
               <div id="stock" hidden> 
                 <span class="crossBtn" onclick="cancelStock()">X</span>
-                <form>
-                  <input name="Item" placeholder="Item" type="text" required />
-                  <input name="Supplier" placeholder="Supplier" type="text" required />
+                <form id="addStockItem">
+                  <select  placeholder="Item" name="Item">
+                    <option value="" disabled selected>Item</option>
+                  </select>
+                  <select  placeholder="Supplier" name="Supplier">
+                    <option value="" disabled selected>Supplier</option>
+                  </select>
                   <br>
-                  <input name="QTY" placeholder="Quantity" type="text" required />
+                  <label for="bestbefore">Best Before</label>
+                  <input name="bestbefore" type="date" required />
+                  <input style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required />
                   <input name="barcode" placeholder="Barcode" type="text" required />
-                  <input name="bestbefore" placeholder="Best Before" type="date" required />
                   <br>
-                  <button class="loginbtn" onclick="return false;">Add Stock</button>
+                  <button class="loginbtn" onclick="addStock(); return false;">Add Stock</button>
                 </form>
               </div>
               <div id="order" hidden>

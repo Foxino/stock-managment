@@ -212,6 +212,11 @@ function stock(id){
 
 }
 
+function addStock(){
+    let r = getFromForm("addStockItem")
+    console.log(r)
+}
+
 function cancelStock(){
     let elements = document.querySelectorAll(".bar");
     [].forEach.call( elements, (el)=>{
