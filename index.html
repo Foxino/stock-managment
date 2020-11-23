@@ -34,6 +34,7 @@
       <div class="sidenav">
         <a onclick="content(1)"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
         <a onclick="content(1)">Overview</a>
+        <a onclick="content(5)">Stock</a>
         <a onclick="content(2)">Suppliers</a>
         <a onclick="content(4)">Ingredients</a>
         <a href="#contact">Product</a>
@@ -44,38 +45,27 @@
       <div class="content-body">
           <div class="content" id="1d">
             <h2>Pie Heroes</h2>
-            <div class="buttonBar">
-              <button id="addstock" class="btn bar" onclick="stock(this.id)">Add Stock</button>
-              <button id="addorder" class="btn bar" onclick="stock(this.id)">Add Order</button>
-              <button id="addproduct" class="btn bar" onclick="stock(this.id)">Add Product</button>
-            </div>
-            <div id="addstockcontent">
-              <div id="stock" hidden> 
-                <span class="crossBtn" onclick="cancelStock()">X</span>
-                <form id="addStockItem">
-                  <select  placeholder="Item" name="Item">
-                    <option value="" disabled selected>Item</option>
-                  </select>
-                  <select  placeholder="Supplier" name="Supplier">
-                    <option value="" disabled selected>Supplier</option>
-                  </select>
-                  <br>
-                  <label for="bestbefore">Best Before</label>
-                  <input name="bestbefore" type="date" required />
-                  <input style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required />
-                  <input name="barcode" placeholder="Barcode" type="text" required />
-                  <br>
-                  <button class="loginbtn" onclick="addStock(); return false;">Add Stock</button>
-                </form>
-              </div>
-              <div id="order" hidden>
-                <span class="crossBtn" onclick="cancelStock()">X</span>
-
-              </div>
-              <div id="product" hidden>
-                <span class="crossBtn" onclick="cancelStock()">X</span>
-
-              </div>
+            
+          </div>
+          <div class="content" id="5d" hidden>
+            <h2>Stock</h2>
+            <form id="addStockItem">
+              <select id="IndList" placeholder="Item" name="Item">
+                <option value="" disabled selected>Item</option>
+              </select>
+              <select id="supplierList" placeholder="Supplier" name="Supplier">
+                <option value="" disabled selected>Supplier</option>
+              </select>
+              <br>
+              <label for="bestbefore">Best Before</label>
+              <input name="bestbefore" type="date" required />
+              <input style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required />
+              <input name="barcode" placeholder="Barcode" type="text" required />
+              <br>
+              <button class="loginbtn" onclick="addStock(); return false;">Add Stock</button>
+            </form>
+            <div id="StockTable">
+              Loading Stock Table... 
             </div>
           </div>
           <div class="content" id="4d" hidden>

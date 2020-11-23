@@ -49,7 +49,7 @@ function firstTimeDB(db){
 
         log("CREATED ingredient TABLE")
 
-        db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text, deleted numeric DEFAULT 0)')
+        db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text UNIQUE, deleted numeric DEFAULT 0)')
 
         log("CREATED stock TABLE")
         
@@ -185,6 +185,9 @@ function createWindow () {
     indSearchWord = data
     updateIndTable()
   })
+  ipcMain.on("add-stock", (evt, data)=>{
+    addStock(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -200,6 +203,37 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function addStock(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `INSERT INTO stock(id, indid, supid, quant, pdate, bbefore, barcode) VALUES ("${uuidv4()}", "${data.Item}", "${data.Supplier}", "${data.QTY}", "${Date.now()}", "${Date.parse(data.bestbefore)}", "${data.barcode}")`
+
+  db.run(q, (err) =>{
+    if(err){
+      if(err.errno == 19){
+        flash("Barcode must be unique", 3);
+      }else{
+        flash(err.message, 3)
+      }
+    }else{
+      updateStockTable();
+    }
+  })
+}
+
+function updateStockTable(){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
+          INNER JOIN 'supplier' su ON su.id = st.supid 
+          INNER JOIN 'ingredient' ind on ind.id = st.indid`
+  //quantity will be changed when it is used eventually
+
+  db.all(q, (err, rows) =>{
+    if(!err){
+      win.webContents.send("update-stock-table", rows)
+    }
+  })
+}
 
 function addInd(data){
   let db = new sqlite3.Database(databaseLocation)
@@ -379,6 +413,7 @@ function initData(){
   getUserList()
   updateSupplierTable()
   updateIndTable()
+  updateStockTable()
 }
 
 function logIn(data){

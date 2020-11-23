@@ -42,6 +42,9 @@ if(true){
         ipc.on("updateIndTable", (evt, data) =>{
             loadIndTable(data);
         })
+        ipc.on("update-stock-table", (evt, data)=>{
+            loadStockTable(data);
+        })
     })
 }
 
@@ -110,6 +113,19 @@ function flashCard(message, level){
     setTimeout(() => {  fm.style.display = "none" }, 2000);
 }
 
+function loadStockTable(data){
+    let d = document.getElementById("StockTable");
+    let table = "<table>"
+    table += "<tr><th>Ingredient</th><th>Supplier</th><th>QTY</th><th>Barcode</th><th>Best Before</th></tr>"
+    for (let x = 0; x < data.length; x++) {
+        let bbefore = new Date(parseInt(data[x].bbefore))
+        table += `<tr><td>${data[x].indname}</td><td>${data[x].supname}</td><td>${data[x].qty}</td><td>${data[x].barcode}</td><td>${bbefore.toLocaleDateString('en-GB')}</td></tr>`
+    }
+    table += "</table>"
+    d.innerHTML = table
+}
+
+
 function loadIndTable(data){
     let d = document.getElementById("IngredientTable")
     let table = "<table>"
@@ -124,6 +140,20 @@ function loadIndTable(data){
     }
     table += "</table>"
     d.innerHTML = table
+
+    let IndList = document.getElementById("IndList")
+
+    IndList.innerHTML = '<option value="" disabled selected>Item</option>';
+
+    for (let x = 0; x < data.length; x++) {
+        let d = data[x]
+        if(d.deleted === 0){
+            opt = document.createElement('option');
+            opt.value = d.id
+            opt.text = d.name
+            IndList.add(opt)
+        }
+    }
 }
 
 function editInd(cell, id){
@@ -180,6 +210,20 @@ function loadSupplierTable(data){
     table += `</table>`
     d.innerHTML = table
 
+    let supplierTable = document.getElementById("supplierList")
+
+    supplierTable.innerHTML = '<option value="" disabled selected>Supplier</option>';
+
+    for (let x = 0; x < data.length; x++) {
+        let d = data[x]
+        if(d.deleted === 0){
+            opt = document.createElement('option');
+            opt.value = d.id
+            opt.text = d.name
+            supplierTable.add(opt)
+        }
+    }
+
 }
 
 function addInd(){
@@ -214,7 +258,30 @@ function stock(id){
 
 function addStock(){
     let r = getFromForm("addStockItem")
-    console.log(r)
+    let res = r.results
+
+    //valdiation
+    if(res.Item === "" || res.Supplier === ""){
+        flashCard("Please Select Supplier and Ingredient", 2)
+        return
+    }
+
+    if(res.bestbefore === ""){
+        flashCard("Please Select a Date", 2)
+        return
+    }
+
+    if(res.barcode === ""){
+        flashCard("Please Enter Barcode", 2)
+        return
+    }
+
+    if(res.QTY === "" || isNaN(res.QTY)){
+        flashCard("Please Enter a Valid Quantity", 2)
+        return
+    }
+
+    ipc.send("add-stock", res)
 }
 
 function cancelStock(){
