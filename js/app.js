@@ -45,7 +45,24 @@ if(true){
         ipc.on("update-stock-table", (evt, data)=>{
             loadStockTable(data);
         })
+        ipc.on("update-product-table", (evt, data)=>{
+            loadProductTable(data);
+        })
     })
+}
+
+
+
+function addProd(){
+    let r = getFromForm("prod")
+    let res = r.results
+    let f = r.form
+    if(res.name !== ""){
+        ipc.send("add-product", res.name)
+        f.reset()
+    }else{
+        return
+    }
 }
 
 function content(c){
@@ -111,6 +128,28 @@ function flashCard(message, level){
     fm.style.display = "block"
     fm.style.backgroundColor = alertColors[level-1]
     setTimeout(() => {  fm.style.display = "none" }, 2000);
+}
+
+function loadProductTable(data){
+    let d = document.getElementById("ProdTable");
+    let table = "<table>"
+
+    let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')
+
+    table += "<tr><th>Name</th><th>Deactivate</th></tr>"
+    for (let x = 0; x < data.length; x++) {
+        
+        let delClass = ((data[x].deleted == 1) ? "class=deact" : "")
+        let editper = (((userData.level === 0 || userData.editPer === 1) && data[x].deleted === 0) ? 'contenteditable' : '')
+        let delBtn = (data[x].deleted === 0 ? `<button class="btn red" onclick='editProd("${data[x].id}", "deleted", 1)' ${removeper}>Deactivate</button>` : `<button class="btn green" onclick='editProd("${data[x].id}", "deleted", 0)'  ${removeper}>Reinstate</button>`)
+        table += `<tr ${delClass}><td  ${editper} onfocusout='editProd("${data[x].id}", "name", this.innerHTML)' >${data[x].name}</td><td>${delBtn}</td></tr>`
+    }
+    table += "</table>"
+    d.innerHTML = table
+}
+
+function editProd(id, field, value){
+    ipc.send("edit-product", {"id" : id, "field": field, "value": value})
 }
 
 function loadStockTable(data){

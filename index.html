@@ -33,22 +33,39 @@
       <div id="main-content" hidden>
       <div class="sidenav">
         <a onclick="content(1)"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
-        <a onclick="content(1)">Overview</a>
-        <a onclick="content(5)">Stock</a>
+        <span style="color: white;" >Stock</span><br>
+        <a onclick="content(5)">Ingredients</a>
+        <a onclick="content(7)">Produce</a>
+        <br><br><span style="color: white;" >Settings</span><br>
         <a onclick="content(2)">Suppliers</a>
         <a onclick="content(4)">Ingredients</a>
-        <a href="#contact">Product</a>
-        <br><br><br>
-        <a onclick="content(0)"style="background-color: red;" id="adminPBtn">Admin Panel</a>
+        <a onclick="content(6)">Product</a>
+        <br><br><span style="color: white;" >User</span><br>
+        <a onclick="content(0)"style="color: red;" id="adminPBtn">Admin Panel</a>
         <a onclick="content(3)">User Panel</a>
       </div>
       <div class="content-body">
           <div class="content" id="1d">
             <h2>Pie Heroes</h2>
-            
+            <div>
+              Aim to have some kind of live overview with notifications here?
+            </div>
+          </div><div class="content" id="7d" hidden>
+            <h2>Produce</h2>
+            Add output products and their stage in production
+          </div>
+          <div class="content" id="6d" hidden>
+            <h2>Product</h2>
+            <form id="prod">
+              <input name="name" placeholder="Name" type="text" required />
+              <button class="loginbtn" onclick="addProd(); return false;">Add Product</button>
+            </form><br>
+            <div id="ProdTable">
+              Loading Product Table... 
+            </div>
           </div>
           <div class="content" id="5d" hidden>
-            <h2>Stock</h2>
+            <h2>Ingredients</h2>
             <form id="addStockItem">
               <select id="IndList" placeholder="Item" name="Item">
                 <option value="" disabled selected>Item</option>

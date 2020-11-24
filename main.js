@@ -52,6 +52,10 @@ function firstTimeDB(db){
         db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text UNIQUE, deleted numeric DEFAULT 0)')
 
         log("CREATED stock TABLE")
+
+        db.run("CREATE TABLE product(id text, name text UNIQUE, deleted numeric DEFAULT 0)")
+
+        log("CREATED product TABLE")
         
       }else{
         flash(err.message, 3)
@@ -188,6 +192,12 @@ function createWindow () {
   ipcMain.on("add-stock", (evt, data)=>{
     addStock(data)
   })
+  ipcMain.on("add-product", (evt, data)=>{
+    addProduct(data)
+  })
+  ipcMain.on("edit-product", (evt, data)=>{
+    editProduct(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -203,6 +213,50 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function updateProductTable(){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT * FROM product`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      if(rows){
+        win.webContents.send("update-product-table", rows)
+      }
+    }
+  })
+}
+
+function addProduct(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `INSERT INTO product(id, name) VALUES ("${uuidv4()}", "${data}")`
+
+  db.run(q, (err)=>{
+    if(err){
+      if(err.errno === 19){
+        flash("Product Name Must Be Unique", 3)
+      }
+    }else{
+      updateProductTable();
+    }
+  })
+}
+
+function editProduct(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE product SET ${data.field} = "${data.value}" WHERE id = "${data.id}"`
+
+  db.run(q, (err)=>{
+    if(err){
+      if(err.errno === 19){
+        flash("Product Name Must Be Unique", 3)
+        updateProductTable();
+      }
+    }else{
+      updateProductTable();
+    }
+  })
+}
 
 function addStock(data){
   let db = new sqlite3.Database(databaseLocation)
@@ -414,6 +468,7 @@ function initData(){
   updateSupplierTable()
   updateIndTable()
   updateStockTable()
+  updateProductTable()
 }
 
 function logIn(data){

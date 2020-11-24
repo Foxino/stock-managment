@@ -264,3 +264,7 @@ tr:nth-child(even) {
 	position: absolute;
 	right: 5px;
 }
+
+.sidenav a {
+	cursor: pointer;
+}
