@@ -2,6 +2,7 @@ const electron = require("electron");
 const ipc = electron.ipcRenderer;
 const alertColors = ["limegreen", "orange", "red"]
 var userData = null;
+var indTableData = null;
 
 //flow control
 
@@ -48,9 +49,77 @@ if(true){
         ipc.on("update-product-table", (evt, data)=>{
             loadProductTable(data);
         })
+        ipc.on("update-recipe", (evt, data)=>{
+            loadRecipeInfo(data)
+        })
     })
 }
 
+function loadRecipeInfo(data){
+    let r = document.getElementById("productRecipe")
+    
+    let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')
+    let editper = ((userData.level === 0 || userData.editPer === 1) ? 'contenteditable' : '')
+
+    let idn = data.id + "recipe"
+
+    let d = `<select id="${idn}" placeholder="Item" name="Item"><option value="" disabled selected>Ingredient</option></select>`
+    d += `  <input id="recipeitemqty" style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required />`
+    d += `<button class="btn green" onclick='addRecipeItem("${data.id}"); return false;' > Add </button>`
+
+    d += `<br><br> <table> <tr><th>Ingredient</th><th>Qty</th><th>Delete</th></tr>`
+
+    let itemsInUse = []
+
+    for (let x = 0; x < data.items.length; x++) {
+        itemsInUse.push(data.items[x].id)
+        d += `<tr><td>${data.items[x].name}</td><td ${editper} onfocusout='editRecipeItem("${data.id}", "${data.items[x].id}", this.innerHTML)' >${data.items[x].quant}</td><td><button onclick='deleteRecipeItem("${data.id}", "${data.items[x].id}")' class="btn red" ${removeper} >Delete</button></td></tr>`
+    }
+
+    d += `</table>`
+
+    r.innerHTML = d
+    
+    if(indTableData){
+
+        let IndList = document.getElementById(idn)
+
+        IndList.innerHTML = '<option value="" disabled selected>Ingredient</option>';
+
+        for (let x = 0; x < indTableData.length; x++) {
+            let d = indTableData[x]
+            if(d.deleted === 0){
+                opt = document.createElement('option');
+                opt.value = d.id
+                opt.text = d.name
+                opt.disabled = itemsInUse.includes(d.id)
+                IndList.add(opt)
+            }
+        }
+    }
+
+
+}
+
+function editRecipeItem(id, indId, value){
+    if(value !== "" && !isNaN(value)){
+        ipc.send("edit-recipe-item", {"prodid" : id, "indid" : indId, "value" : value})
+    }
+}
+
+function deleteRecipeItem(id, indId){
+    ipc.send("delete-recipe-item", {"prodid" : id, "indid" : indId})
+}
+
+function addRecipeItem(id){
+    let indId = document.getElementById(id+"recipe").value
+    let indQty = document.getElementById("recipeitemqty").value
+
+    if(indId !== "" && indQty !== ""){
+        ipc.send("add-recipe-item", {"id" : id, "indId" : indId, "indQty" : indQty})
+    }
+
+}
 
 
 function addProd(){
@@ -146,6 +215,27 @@ function loadProductTable(data){
     }
     table += "</table>"
     d.innerHTML = table
+
+    let ProdList = document.getElementById("ProdList")
+
+    ProdList.innerHTML = '<option value="" disabled selected>Product</option>';
+
+    for (let x = 0; x < data.length; x++) {
+        let d = data[x]
+        if(d.deleted === 0){
+            opt = document.createElement('option');
+            opt.value = d.id
+            opt.text = d.name
+            ProdList.add(opt)
+        }
+    }
+}
+
+function loadProdRecipe(cell){
+    let activeProduct = cell.value
+    if(activeProduct !== ""){
+        ipc.send("get-product-recipe", activeProduct)
+    }
 }
 
 function editProd(id, field, value){
@@ -166,6 +256,7 @@ function loadStockTable(data){
 
 
 function loadIndTable(data){
+    indTableData = data
     let d = document.getElementById("IngredientTable")
     let table = "<table>"
     let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')

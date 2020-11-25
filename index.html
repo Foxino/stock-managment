@@ -58,7 +58,12 @@
           </div>
           <div class="content" id="8d" hidden>
             <h2>Recipe Builder</h2>
-            Improves automation on products
+            <select onchange="loadProdRecipe(this)" id="ProdList" placeholder="Item" name="Item">
+              <option value="" disabled selected>Product</option>
+            </select>
+            <div id="productRecipe">
+              <br>No Product Selected Above
+            </div>
           </div>
           <div class="content" id="6d" hidden>
             <h2>Product</h2>

@@ -56,6 +56,8 @@ function firstTimeDB(db){
         db.run("CREATE TABLE product(id text, name text UNIQUE, deleted numeric DEFAULT 0)")
 
         log("CREATED product TABLE")
+
+        db.run("CREATE TABLE recipeitem(indid text, prodid text, quant numeric)")
         
       }else{
         flash(err.message, 3)
@@ -198,6 +200,18 @@ function createWindow () {
   ipcMain.on("edit-product", (evt, data)=>{
     editProduct(data)
   })
+  ipcMain.on("get-product-recipe", (evt, data)=>{
+    getRecipe(data)
+  })
+  ipcMain.on("add-recipe-item", (evt, data)=>{
+    addRecipeItem(data)
+  })
+  ipcMain.on("delete-recipe-item", (evt, data)=>{
+    deleteRecipeItem(data)
+  })
+  ipcMain.on("edit-recipe-item", (evt, data)=>{
+    editRecipeItem(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -213,6 +227,52 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function getRecipe(id){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT i.id, i.name, ri.quant FROM recipeitem ri INNER JOIN ingredient i ON i.id = ri.indid WHERE ri.prodid = "${id}"`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      win.webContents.send("update-recipe", {"id" : id, "items" : rows})
+    }
+  })
+}
+
+function editRecipeItem(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE recipeitem SET quant = ${data.value} WHERE indid = "${data.indid}" AND prodid = "${data.prodid}"`
+
+  db.run(q, (err)=>{
+    if(!err){
+      getRecipe(data.prodid)
+    }
+  })
+}
+
+function deleteRecipeItem(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `DELETE FROM recipeitem WHERE indid = "${data.indid}" AND prodid = "${data.prodid}"`
+
+  db.run(q, (err)=>{
+    if(!err){
+      getRecipe(data.prodid)
+    }
+  })
+}
+
+function addRecipeItem(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `INSERT INTO recipeitem(indid, prodid, quant) VALUES("${data.indId}", "${data.id}", ${data.indQty})`
+
+  db.run(q, (err)=>{
+    if(err){
+      console.log(err.message)
+    }else{
+      getRecipe(data.id)
+    }
+  })
+}
 
 function updateProductTable(){
   let db = new sqlite3.Database(databaseLocation)
