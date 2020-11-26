@@ -245,15 +245,27 @@ function editProd(id, field, value){
 function loadStockTable(data){
     let d = document.getElementById("StockTable");
     let table = "<table>"
-    table += "<tr><th>Ingredient</th><th>Supplier</th><th>QTY</th><th>Barcode</th><th>Best Before</th></tr>"
+    let removeper = ((userData.level === 0 || userData.removePer === 1) ? '' : 'disabled')
+    table += "<tr><th>Ingredient</th><th>Supplier</th><th>QTY</th><th>Barcode</th><th>Best Before</th><th>Delete</th></tr>"
     for (let x = 0; x < data.length; x++) {
+        
+        let delClass = ((data[x].deleted == 1) ? "class=deact" : "")
         let bbefore = new Date(parseInt(data[x].bbefore))
-        table += `<tr><td>${data[x].indname}</td><td>${data[x].supname}</td><td>${data[x].qty}</td><td>${data[x].barcode}</td><td>${bbefore.toLocaleDateString('en-GB')}</td></tr>`
+
+        let ood = ((bbefore < Date.now()) ? 'style="color: red;"' : '')
+        console.log(ood)
+
+        let delBtn = (data[x].deleted === 0 ? `<button class="btn red" onclick='editStock("${data[x].id}", "deleted", 1)' ${removeper}>Delete</button>` : `<button class="btn green" onclick='editStock("${data[x].id}", "deleted", 0)'  ${removeper}>Reinstate</button>` )
+        
+        table += `<tr ${delClass} ${ood} ><td>${data[x].indname}</td><td>${data[x].supname}</td><td>${data[x].qty}</td><td>${data[x].barcode}</td><td>${bbefore.toLocaleDateString('en-GB')}</td><td>${delBtn}</td></tr>`
     }
     table += "</table>"
     d.innerHTML = table
 }
 
+function editStock(id, field, value){
+    ipc.send("edit-stock", {"id": id, "field": field, "value": value})
+}
 
 function loadIndTable(data){
     indTableData = data

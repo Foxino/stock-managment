@@ -58,6 +58,8 @@ function firstTimeDB(db){
         log("CREATED product TABLE")
 
         db.run("CREATE TABLE recipeitem(indid text, prodid text, quant numeric)")
+
+        log("CREATED recipeitem TABLE")
         
       }else{
         flash(err.message, 3)
@@ -212,6 +214,9 @@ function createWindow () {
   ipcMain.on("edit-recipe-item", (evt, data)=>{
     editRecipeItem(data)
   })
+  ipcMain.on("edit-stock", (evt, data)=>{
+    editStock(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -318,6 +323,18 @@ function editProduct(data){
   })
 }
 
+function editStock(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `UPDATE stock SET ${data.field} = ${data.value} WHERE id = "${data.id}"`
+  db.run(q, (err)=>{
+    if(!err){
+      updateStockTable();
+    }else{
+      console.log(err.message)
+    }
+  })
+}
+
 function addStock(data){
   let db = new sqlite3.Database(databaseLocation)
   let q = `INSERT INTO stock(id, indid, supid, quant, pdate, bbefore, barcode) VALUES ("${uuidv4()}", "${data.Item}", "${data.Supplier}", "${data.QTY}", "${Date.now()}", "${Date.parse(data.bestbefore)}", "${data.barcode}")`
@@ -337,7 +354,7 @@ function addStock(data){
 
 function updateStockTable(){
   let db = new sqlite3.Database(databaseLocation)
-  let q = `SELECT su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
+  let q = `SELECT st.id, su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
           INNER JOIN 'supplier' su ON su.id = st.supid 
           INNER JOIN 'ingredient' ind on ind.id = st.indid`
   //quantity will be changed when it is used eventually

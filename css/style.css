@@ -201,7 +201,8 @@ tr:nth-child(even) {
 }
 
 #supplierTable,
-#userTable {
+#userTable,
+#StockTable {
 	overflow-y: auto;
 	height: 45vh;
 }
