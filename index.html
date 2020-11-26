@@ -89,8 +89,9 @@
               <input name="bestbefore" type="date" required />
               <input style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required />
               <input name="barcode" placeholder="Barcode" type="text" required />
-              <br>
               <button class="loginbtn" onclick="addStock(); return false;">Add Stock</button>
+              <br>
+              <input oninput="searchSt(this)" name="searchStock" placeholder="Search" type="text"/>
             </form>
             <div id="StockTable">
               Loading Stock Table... 

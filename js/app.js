@@ -31,8 +31,10 @@ if(true){
             document.getElementById("main-content").style.display = "block"
         })
         ipc.on("register", () => {
-            document.getElementById("login-box").style.display = "block"
-            document.getElementById("firstTimeWindow").style.display = "none"
+            if(!userData){
+                document.getElementById("login-box").style.display = "block"
+                document.getElementById("firstTimeWindow").style.display = "none"
+            }
         })
         ipc.on("updatedUserList", (evt, result) =>{
             loadUserTable(result);
@@ -253,7 +255,6 @@ function loadStockTable(data){
         let bbefore = new Date(parseInt(data[x].bbefore))
 
         let ood = ((bbefore < Date.now()) ? 'style="color: red;"' : '')
-        console.log(ood)
 
         let delBtn = (data[x].deleted === 0 ? `<button class="btn red" onclick='editStock("${data[x].id}", "deleted", 1)' ${removeper}>Delete</button>` : `<button class="btn green" onclick='editStock("${data[x].id}", "deleted", 0)'  ${removeper}>Reinstate</button>` )
         
@@ -314,6 +315,10 @@ function editInd(cell, id){
 
 function searchInd(cell){
     ipc.send("search-ind", cell.value)
+}
+
+function searchSt(cell){
+    ipc.send("search-stock", cell.value)
 }
 
 function loadUserTable(rows){

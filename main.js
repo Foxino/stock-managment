@@ -13,6 +13,7 @@ let newAccWin
 let userSearchWord = ''
 let supplierSearchWord = ''
 let indSearchWord = ''
+let stockSearchWord = ''
 
 function createDB(){
     //first run. Create a database.
@@ -217,6 +218,10 @@ function createWindow () {
   ipcMain.on("edit-stock", (evt, data)=>{
     editStock(data)
   })
+  ipcMain.on("search-stock", (evt, data)=>{
+    stockSearchWord = data
+    updateStockTable()
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -354,9 +359,12 @@ function addStock(data){
 
 function updateStockTable(){
   let db = new sqlite3.Database(databaseLocation)
+
+  let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%"` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()}` : ""))
+
   let q = `SELECT st.id, su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
           INNER JOIN 'supplier' su ON su.id = st.supid 
-          INNER JOIN 'ingredient' ind on ind.id = st.indid`
+          INNER JOIN 'ingredient' ind on ind.id = st.indid ${sr}`
   //quantity will be changed when it is used eventually
 
   db.all(q, (err, rows) =>{
@@ -435,7 +443,7 @@ function addSuppler(data){
 
 function updateSupplierTable(){
   let db = new sqlite3.Database(databaseLocation)
-  let s = (supplierSearchWord != "" ? ` WHERE name LIKE "%${supplierSearchWord}%"` : '')
+  let s = (supplierSearchWord != "" ? ` WHERE name LIKE "%${supplierSearchWord}%" OR address LIKE "%${supplierSearchWord}%" OR email LIKE "%${supplierSearchWord}%" OR phone LIKE "%${supplierSearchWord}%"` : '')
   let q = `SELECT * FROM supplier ${s} ORDER BY name ASC`
 
   db.all(q, (err, rows) =>{
