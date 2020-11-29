@@ -92,6 +92,11 @@
               <button class="loginbtn" onclick="addStock(); return false;">Add Stock</button>
               <br>
               <input oninput="searchSt(this)" name="searchStock" placeholder="Search" type="text"/>
+              <label class="containr">
+                Show Hidden
+                <input type="checkbox" onclick="searchStD(this)">
+                <span class="checkmark"></span>
+              </label>
             </form>
             <div id="StockTable">
               Loading Stock Table... 

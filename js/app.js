@@ -321,6 +321,10 @@ function searchInd(cell){
     ipc.send("search-ind", cell.value)
 }
 
+function searchStD(cell){
+    ipc.send("stock-deleted-show", cell.checked)
+}
+
 function searchSt(cell){
     ipc.send("search-stock", cell.value)
 }

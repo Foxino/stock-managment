@@ -19,6 +19,7 @@ let userSearchWord = ''
 let supplierSearchWord = ''
 let indSearchWord = ''
 let stockSearchWord = ''
+let stockSearchDeleted = false
 
 function createDB(){
     //first run. Create a database.
@@ -229,6 +230,10 @@ function createWindow () {
     stockSearchWord = data
     updateStockTable()
   })
+  ipcMain.on("stock-deleted-show", (evt, data)=>{
+    stockSearchDeleted = data
+    updateStockTable()
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -367,7 +372,9 @@ function addStock(data){
 function updateStockTable(){
   let db = new sqlite3.Database(databaseLocation)
 
-  let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%"` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()}` : ""))
+  let dsr = (stockSearchDeleted ? "" : (stockSearchWord == "" ? "WHERE st.deleted = 0": "AND st.deleted = 0"))
+
+  let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%" ${dsr}` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()} ${dsr}` : dsr))
 
   let q = `SELECT st.id, su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
           INNER JOIN 'supplier' su ON su.id = st.supid 
