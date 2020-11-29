@@ -153,7 +153,11 @@ function newAccount(form){
         ipc.send("create-user", res)
         f.reset()
     }else{
-        flashCard("Passwords do not match!", 2)
+        if(res.user === ""){
+            flashCard("Please Enter a Valid Username", 2)
+        }else{
+            flashCard("Passwords do not match!", 2)
+        }
     }
 }
 

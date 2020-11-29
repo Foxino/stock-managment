@@ -1,3 +1,4 @@
+//system settings & modules
 const { app, BrowserWindow, ipcMain } = require('electron')
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs')
@@ -5,8 +6,12 @@ const databaseLocation = "./pie.db"
 const {v4 : uuidv4} = require('uuid')
 const bcrypt = require('bcrypt')
 
-const saltRounds = 10
+//for patching purposes on the database. Mitagation scripts may need to be ran to upgrade to newer achitecture  
+const system_version = "1.0"
 const system_user = "SYSTEM"
+
+//logging & encrypt
+const saltRounds = 10
 let currentUserData = null
 let win
 let newAccWin
@@ -61,6 +66,8 @@ function firstTimeDB(db){
         db.run("CREATE TABLE recipeitem(indid text, prodid text, quant numeric)")
 
         log("CREATED recipeitem TABLE")
+
+        // settings db required to store version number.
         
       }else{
         flash(err.message, 3)
