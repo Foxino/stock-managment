@@ -53,8 +53,13 @@
             </div>
           </div>
           <div class="content" id="7d" hidden>
-            <h2>Produce</h2>
-            Add output products and their stage in production
+            <h2>Add new Product</h2>
+            <select onchange="loadProductRecipeTemplate(this)" id="ProdList2" placeholder="Item" name="Item">
+              <option value="" disabled selected>Product</option>
+            </select>
+            <div id="recipeTemplate">
+              No Product Selected Above
+            </div>
           </div>
           <div class="content" id="8d" hidden>
             <h2>Recipe Builder</h2>

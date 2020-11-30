@@ -54,7 +54,41 @@ if(true){
         ipc.on("update-recipe", (evt, data)=>{
             loadRecipeInfo(data)
         })
+        ipc.on("recipe-template", (evt, data)=>{
+            loadRecipeTemplate(data)
+        })
+        ipc.on("successful-barcode", (evt, data)=>{
+            document.getElementById("indstocklist").value = data[0].id
+            document.getElementById("stockitemqty").value = data[0].quant
+            document.getElementById("stockqtymax").innerHTML = " / " + data[0].quant
+        })
     })
+}
+
+function loadRecipeTemplate(data){
+    let r = document.getElementById("recipeTemplate")
+
+    let t = `<label for="bestbefore">Best Before</label> <input name="bestbefore" type="date" required /> <input id="barcode" name="QTY" placeholder="Barcode" type="text" required />`
+
+    t += `<h3>Ingredients</h3>`
+
+    t += `<label for="bestbefore">Barcode Search</label> <input name="text" type="text" oninput='checkForStock(this)'/> `
+    t += `<select id="indstocklist" placeholder="Item" name="Item"><option value="" disabled selected>Ingredient</option>`
+    
+    for (let x = 0; x < data.stockList.length; x++) {
+        let d = data.stockList[x]
+        let s = d.name + " (" + d.barcode + ", " + d.quant + ")"
+        t += `<option value="${d.id}">${s}</option>`
+        
+    }
+
+    t += `</select> <input id="stockitemqty" style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required /> <span id="stockqtymax"> / NA </span> <button class="btn green"  >Add</button> `
+
+    r.innerHTML = t
+}
+
+function checkForStock(cell){
+    cell.value != "" ? ipc.send("check-stock-barcode", cell.value) : 0
 }
 
 function loadRecipeInfo(data){
@@ -205,6 +239,13 @@ function flashCard(message, level){
     setTimeout(() => {  fm.style.display = "none" }, 2000);
 }
 
+function loadProductRecipeTemplate(cell){
+    let activeProduct = cell.value
+    if(activeProduct !== ""){
+        ipc.send("get-product-recipe-template", activeProduct)
+    }
+}
+
 function loadProductTable(data){
     let d = document.getElementById("ProdTable");
     let table = "<table>"
@@ -223,7 +264,9 @@ function loadProductTable(data){
     d.innerHTML = table
 
     let ProdList = document.getElementById("ProdList")
-
+    let ProdList2 = document.getElementById("ProdList2")
+    
+    ProdList2.innerHTML = '<option value="" disabled selected>Product</option>';
     ProdList.innerHTML = '<option value="" disabled selected>Product</option>';
 
     for (let x = 0; x < data.length; x++) {
@@ -233,6 +276,15 @@ function loadProductTable(data){
             opt.value = d.id
             opt.text = d.name
             ProdList.add(opt)
+        }
+    }
+    for (let x = 0; x < data.length; x++) {
+        let d = data[x]
+        if(d.deleted === 0){
+            opt = document.createElement('option');
+            opt.value = d.id
+            opt.text = d.name
+            ProdList2.add(opt)
         }
     }
 }

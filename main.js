@@ -234,6 +234,12 @@ function createWindow () {
     stockSearchDeleted = data
     updateStockTable()
   })
+  ipcMain.on("get-product-recipe-template", (evt, data)=>{
+    getRecipeTemplate(data)
+  })
+  ipcMain.on("check-stock-barcode", (evt, data)=>{
+    barcodeSearch(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -249,6 +255,34 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function barcodeSearch(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT id, quant FROM stock WHERE barcode = "${data}" AND deleted = 0`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      console.log(rows)
+      rows ? win.webContents.send("successful-barcode", rows) : 0
+    }
+  })
+}
+
+
+function getRecipeTemplate(id){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT i.id, i.name, ri.quant FROM recipeitem ri INNER JOIN ingredient i ON i.id = ri.indid WHERE ri.prodid = "${id}"`
+  let q2 = `SELECT st.id, st.quant, i.name, st.barcode FROM stock st INNER JOIN ingredient i ON i.id = st.indid WHERE st.deleted = 0`
+
+  db.all(q, (err, rows)=>{
+    let r = rows
+    if(!err){
+      db.all(q2, (err, rows)=>{
+        win.webContents.send("recipe-template", {"id" : id, "items" : r, "stockList": rows})
+      })
+    }
+  })
+}
 
 function getRecipe(id){
   let db = new sqlite3.Database(databaseLocation)
