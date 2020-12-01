@@ -153,6 +153,8 @@ function addRecipeItem(id){
 
     if(indId !== "" && indQty !== ""){
         ipc.send("add-recipe-item", {"id" : id, "indId" : indId, "indQty" : indQty})
+    }else{
+        flashCard("Incomplete Form", 2)
     }
 
 }

@@ -406,13 +406,14 @@ function addStock(data){
 function updateStockTable(){
   let db = new sqlite3.Database(databaseLocation)
 
-  let dsr = (stockSearchDeleted ? "" : (stockSearchWord == "" ? "WHERE st.deleted = 0": "AND st.deleted = 0"))
+  let dsr = (stockSearchDeleted ? "" : (stockSearchWord == "" ? "WHERE st.deleted = 0" : "AND st.deleted = 0"))
 
-  let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%" ${dsr}` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()} ${dsr}` : dsr))
+  let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE (ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%") ${dsr}` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()} ${dsr}` : dsr))
 
   let q = `SELECT st.id, su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
           INNER JOIN 'supplier' su ON su.id = st.supid 
           INNER JOIN 'ingredient' ind on ind.id = st.indid ${sr}`
+
   //quantity will be changed when it is used eventually
 
   db.all(q, (err, rows) =>{
