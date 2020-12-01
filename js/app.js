@@ -3,6 +3,7 @@ const ipc = electron.ipcRenderer;
 const alertColors = ["limegreen", "orange", "red"]
 var userData = null;
 var indTableData = null;
+var stockInd = [];
 
 //flow control
 
@@ -58,22 +59,60 @@ if(true){
             loadRecipeTemplate(data)
         })
         ipc.on("successful-barcode", (evt, data)=>{
-            document.getElementById("indstocklist").value = data[0].id
-            document.getElementById("stockitemqty").value = data[0].quant
-            document.getElementById("stockqtymax").innerHTML = " / " + data[0].quant
+            uiUpdateStockItem(data)
+        })
+        ipc.on("validate-stock", (evt, data)=>{
+            addStockIndToTable(data);
+        })
+        ipc.on("sucess-stock-entry-product", ()=>{
+            successProductInsert()
         })
     })
 }
 
+function successProductInsert(){
+    document.getElementById("ProdList2").value = ""
+    document.getElementById("recipeTemplate").innerHTML = ""
+    document.getElementById("stockIndTable").innerHTML = ""
+    stockInd = []
+    content(9);
+}
+
+function addStockProduct(){
+
+    let bbefore = document.getElementById("prstockbbefore")
+    let barcode = document.getElementById("prstockbarcode")
+    let prodId = document.getElementById("ProdList2").value
+
+    if(bbefore.value === ""){
+        flashCard("Please enter a best before date", 2)
+        return 
+    }
+
+    if(barcode.value === ""){
+        flashCard("Please enter a barcode", 2)
+        return
+    }
+
+    if(stockInd.length === 0){
+        flashCard("No Ingredients Added", 2)
+        return
+    }
+
+    ipc.send("add-stock-product", {"ind" : stockInd, "bestBefore" : bbefore.value, "barcode": barcode.value, "prodId" : prodId})
+}
+
 function loadRecipeTemplate(data){
+    stockInd = []
+
     let r = document.getElementById("recipeTemplate")
 
-    let t = `<label for="bestbefore">Best Before</label> <input name="bestbefore" type="date" required /> <input id="barcode" name="QTY" placeholder="Barcode" type="text" required />`
+    let t = `<label for="bestbefore">Best Before</label> <input id="prstockbbefore" name="bestbefore" type="date" required /> <input id="prstockbarcode" name="QTY" placeholder="Barcode" type="text" required />`
 
     t += `<h3>Ingredients</h3>`
 
-    t += `<label for="bestbefore">Barcode Search</label> <input name="text" type="text" oninput='checkForStock(this)'/> `
-    t += `<select id="indstocklist" placeholder="Item" name="Item"><option value="" disabled selected>Ingredient</option>`
+    t += `<label for="barcode">Barcode Search</label> <input name="barcode" type="text" oninput='checkForStock(this.value)' /> `
+    t += `<select onchange='checkForStock2(this.value)' id="indstocklist" placeholder="Item" name="Item"><option value="" disabled selected>Ingredient</option>`
     
     for (let x = 0; x < data.stockList.length; x++) {
         let d = data.stockList[x]
@@ -82,13 +121,78 @@ function loadRecipeTemplate(data){
         
     }
 
-    t += `</select> <input id="stockitemqty" style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required /> <span id="stockqtymax"> / NA </span> <button class="btn green"  >Add</button> `
+    t += `</select> <input id="stockitemqty" style="width: 50px;" name="QTY" placeholder="Quantity" type="text" required /> <span id="stockqtymax"> / NA </span> <button onclick='addStockInd()' class="btn green"  >Add</button> `
 
     r.innerHTML = t
+    stockIndTableLoad()
 }
 
-function checkForStock(cell){
-    cell.value != "" ? ipc.send("check-stock-barcode", cell.value) : 0
+function addStockInd(){
+    let stockId = document.getElementById("indstocklist").value
+    let stockQty = document.getElementById("stockitemqty").value
+
+    let c = 0
+
+    for (let x = 0; x < stockInd.length; x++) {
+        stockInd[x].id === stockId ? c += parseInt(stockInd[x].qty) :0; 
+    }
+
+    if(stockId === "" || stockQty === ""){
+        flashCard("Please Complete Form", 2)
+        return
+    }else if(isNaN(stockQty)){
+        flashCard("Quantity must be a number", 2)
+        return
+    }else{
+        ipc.send("validate-stock", {"id": stockId, "qty": stockQty, "deducted" : c})
+    }
+    //stockInd.push("???")
+}
+
+function addStockIndToTable(data){
+    if(!data.res){
+        flashCard("Unable to validate stock request", 3)
+    }else{
+        stockInd.push(data.data)
+        stockIndTableLoad()
+    }
+}
+
+function stockIndTableLoad(){
+    let r = document.getElementById("stockIndTable")
+    let t = "<table>"
+    t += "<tr><th>Ingredient</th><th>Supplier</th><th>Barcode</th><th>QTY</th></tr>"
+    for (let x = 0; x < stockInd.length; x++) {
+        let stockItem = stockInd[x]
+        t += `<tr><td>${stockItem.name}</td><td>${stockItem.supname}</td><td>${stockItem.barcode}</td><td>${stockItem.qty}</td></tr>`
+    }
+    t += "</table>"
+    r.innerHTML = t
+    document.getElementById("indstocklist").value = ""
+    document.getElementById("stockitemqty").value = ""
+    document.getElementById("stockqtymax").innerHTML = " / NA"
+}
+
+function uiUpdateStockItem(data){
+
+    let c = 0
+
+    for (let x = 0; x < stockInd.length; x++) {
+        stockInd[x].id === data[0].id ? c += parseInt(stockInd[x].qty) :0; 
+    }
+
+    document.getElementById("indstocklist").value = data[0].id
+    document.getElementById("stockitemqty").value = (data[0].quant - c)
+    document.getElementById("stockqtymax").innerHTML = " / " + (data[0].quant - c)
+}
+
+function checkForStock2(id){
+    id != "" ? ipc.send("check-stock-id", id) : 0
+}
+
+
+function checkForStock(barcode){
+    barcode != "" ? ipc.send("check-stock-barcode", barcode) : 0
 }
 
 function loadRecipeInfo(data){

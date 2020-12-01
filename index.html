@@ -34,8 +34,9 @@
       <div class="sidenav">
         <a onclick="content(1)"><img width=90 height=90 src="img/pie.png" alt="Pie Heroes"></a>
         <span style="color: white;" >Stock</span><br>
-        <a onclick="content(5)">Ingredients</a>
-        <a onclick="content(7)">Produce</a>
+        <a onclick="content(5)">Add/View Ingredients</a>
+        <a onclick="content(7)">Add Produce</a>
+        <a onclick="content(9)">View Produce</a>
         <br><br><span style="color: white;" >Settings</span><br>
         <a onclick="content(2)">Suppliers</a>
         <a onclick="content(4)">Ingredients</a>
@@ -52,6 +53,12 @@
               Aim to have some kind of live overview with notifications here?
             </div>
           </div>
+          <div class="content" id="9d" hidden>
+            <h2>Produce</h2>
+            <div>
+              Hi
+            </div>
+          </div>
           <div class="content" id="7d" hidden>
             <h2>Add new Product</h2>
             <select onchange="loadProductRecipeTemplate(this)" id="ProdList2" placeholder="Item" name="Item">
@@ -59,6 +66,12 @@
             </select>
             <div id="recipeTemplate">
               No Product Selected Above
+            </div>
+            <div id="stockIndTable">
+              
+            </div>
+            <div style="position: absolute; bottom: 5vh; width: 100%;">
+              <button class="loginbtn" onclick="addStockProduct(); return false;">Add Product</button>
             </div>
           </div>
           <div class="content" id="8d" hidden>

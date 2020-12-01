@@ -68,6 +68,14 @@ function firstTimeDB(db){
 
         log("CREATED recipeitem TABLE")
 
+        db.run("CREATE TABLE stockProduct(id text, pdate text, bbefore text, status numeric, prodid text, barcode text UNIQUE)")
+
+        log("CREATED stockProduct TABLE")
+
+        db.run("CREATE TABLE stockProductInd(stockprodid text, stockid text, quant numeric)")
+
+        log("CREATED stockProductInd TABLE")
+
         // settings db required to store version number.
         
       }else{
@@ -240,6 +248,15 @@ function createWindow () {
   ipcMain.on("check-stock-barcode", (evt, data)=>{
     barcodeSearch(data)
   })
+  ipcMain.on("check-stock-id", (evt, data)=>{
+    stockIdSearch(data)
+  })
+  ipcMain.on("validate-stock", (evt, data)=>{
+    validateStock(data)
+  })
+  ipcMain.on("add-stock-product", (evt, data)=>{
+    addStockProduct(data)
+  })
 }
 
 app.whenReady().then(createWindow)
@@ -256,13 +273,66 @@ app.on('activate', () => {
   }
 })
 
+function addStockProduct(data){
+  let db = new sqlite3.Database(databaseLocation)
+
+  let stockId = uuidv4();
+
+  let q = `INSERT INTO stockProduct(id, pdate, bbefore, status, prodid, barcode) VALUES("${stockId}", "${Date.now()}", "${Date.parse(data.bestBefore)}", 0, "${data.prodId}", "${data.barcode}")`
+
+  
+  db.run(q, (err)=>{
+    if(err){
+      console.log(err.message)
+    }else{
+      for (let x = 0; x < data.ind.length; x++) {
+        let ind = data.ind[x]
+        let q2 = `INSERT INTO stockProductInd(stockprodid, stockid, quant) VALUES("${stockId}", "${ind.id}", ${ind.qty})`
+        db.run(q2, (err)=>{
+          err ? console.log(err.message) : 0;
+        })
+      }
+      win.webContents.send("sucess-stock-entry-product")
+    }
+  })
+}
+
+function validateStock(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT st.barcode, st.quant, i.name as iName, sup.name as sName FROM stock st INNER JOIN ingredient i ON i.id = st.indid INNER JOIN supplier sup ON sup.id = st.supid WHERE st.deleted = 0 AND st.id = "${data.id}"`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      if(rows){
+        data.name = rows[0].iName
+        data.supname = rows[0].sName
+        data.barcode = rows[0].barcode
+        win.webContents.send("validate-stock",{"res" : ((rows[0].quant - data.deducted) >= data.qty), "data" : data})
+        return
+        }
+      }
+      win.webContents.send("validate-stock",{"res" : false, "data" : data})
+  })
+
+}
+
+function stockIdSearch(data){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT id, quant FROM stock WHERE id = "${data}" AND deleted = 0`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      rows ? win.webContents.send("successful-barcode", rows) : 0
+    }
+  })
+}
+
 function barcodeSearch(data){
   let db = new sqlite3.Database(databaseLocation)
   let q = `SELECT id, quant FROM stock WHERE barcode = "${data}" AND deleted = 0`
 
   db.all(q, (err, rows)=>{
     if(!err){
-      console.log(rows)
       rows ? win.webContents.send("successful-barcode", rows) : 0
     }
   })
