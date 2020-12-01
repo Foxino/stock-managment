@@ -24,6 +24,7 @@ Note, while in beta pulling a newer version may require deletion of `pie.db` if 
 
 ### 01/12/2020
 * BugFixes.
+* Can now insert stock produce, missing logic and view options though.
 
 ### 29/11/2020
 * Fixed clarity issue on create account screen. (Showing "Passwords do not match" when user is empty)
