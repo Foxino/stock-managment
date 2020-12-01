@@ -22,6 +22,9 @@ Note, while in beta pulling a newer version may require deletion of `pie.db` if 
 
 **Version 1.0 (beta)**
 
+### 01/12/2020
+* BugFixes.
+
 ### 29/11/2020
 * Fixed clarity issue on create account screen. (Showing "Passwords do not match" when user is empty)
 * [Experimental Feature] Added "Show hidden" checkbox to show/hide deleted entries. 
