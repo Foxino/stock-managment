@@ -44,37 +44,77 @@ function firstTimeDB(db){
       if(!err){
         log("CREATING DATABASE FROM FRESH && CREATED LOG TABLE")
         // user table
-        db.run('CREATE TABLE user(name text UNIQUE, password text, level numeric, ord numeric, edi numeric, rem numeric, deleted numeric DEFAULT 0, id text)')
-        
-        log("CREATED USER TABLE")
+        db.run('CREATE TABLE user(name text UNIQUE, password text, level numeric, ord numeric, edi numeric, rem numeric, deleted numeric DEFAULT 0, id text)', (err)=>{
+          if(!err){
+            log("CREATED USER TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }
+        })
     
-        db.run('CREATE TABLE supplier(id text, name text UNIQUE, address text, phone text, email text, deleted numeric DEFAULT 0)')
+        db.run('CREATE TABLE supplier(id text, name text UNIQUE, address text, phone text, email text, deleted numeric DEFAULT 0)', (err)=>{
+          if(!err){
+            log("CREATED supplier TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }
+        })
 
-        log("CREATED supplier TABLE")
+        db.run('CREATE TABLE ingredient(id text, name text UNIQUE, deleted numeric DEFAULT 0)', (err)=>{
+          if(!err){
+            log("CREATED ingredient TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }
+        })
 
-        db.run('CREATE TABLE ingredient(id text, name text UNIQUE, deleted numeric DEFAULT 0)')
+        db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text UNIQUE, deleted numeric DEFAULT 0)', (err)=>{
+          if(!err){
+            log("CREATED stock TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }
+        })
 
-        log("CREATED ingredient TABLE")
+        db.run("CREATE TABLE product(id text, name text UNIQUE, deleted numeric DEFAULT 0)", (err)=>{
+          if(!err){
+            log("CREATED product TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }        
+        })
 
-        db.run('CREATE TABLE stock(id text, indid text, supid text, quant numeric, pdate text, bbefore text, barcode text UNIQUE, deleted numeric DEFAULT 0)')
+        db.run("CREATE TABLE recipeitem(indid text, prodid text, quant numeric)", (err)=>{
+          if(!err){
+            log("CREATED recipeitem TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          }  
+        })
 
-        log("CREATED stock TABLE")
+        db.run("CREATE TABLE stockProduct(id text, pdate text, bbefore text, status numeric, prodid text, barcode text UNIQUE)", (err)=>{
+          if(!err){
+            log("CREATED stockProduct TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          } 
+        })
 
-        db.run("CREATE TABLE product(id text, name text UNIQUE, deleted numeric DEFAULT 0)")
-
-        log("CREATED product TABLE")
-
-        db.run("CREATE TABLE recipeitem(indid text, prodid text, quant numeric)")
-
-        log("CREATED recipeitem TABLE")
-
-        db.run("CREATE TABLE stockProduct(id text, pdate text, bbefore text, status numeric, prodid text, barcode text UNIQUE)")
-
-        log("CREATED stockProduct TABLE")
-
-        db.run("CREATE TABLE stockProductInd(stockprodid text, stockid text, quant numeric)")
-
-        log("CREATED stockProductInd TABLE")
+        db.run("CREATE TABLE stockProductInd(id text, stockprodid text, stockid text, quant numeric)", (err)=>{
+          if(!err){
+            log("CREATED stockProductInd TABLE")
+          }else{
+            console.log(err.message)
+            log(err.message)
+          } 
+        })
 
         // settings db required to store version number.
         
@@ -273,6 +313,19 @@ app.on('activate', () => {
   }
 })
 
+function getStockData(){
+  let db = new sqlite3.Database(databaseLocation)
+  let q = `SELECT sp.id, p.name, sp.barcode, sp.status, sp.bbefore FROM stockProduct sp INNER JOIN product p on sp.prodid = p.id`
+
+  db.all(q, (err, rows)=>{
+    if(!err){
+      if(rows){
+        win.webContents.send("updated-prod-stock", rows)
+      }
+    }
+  })
+}
+
 function addStockProduct(data){
   let db = new sqlite3.Database(databaseLocation)
 
@@ -287,19 +340,20 @@ function addStockProduct(data){
     }else{
       for (let x = 0; x < data.ind.length; x++) {
         let ind = data.ind[x]
-        let q2 = `INSERT INTO stockProductInd(stockprodid, stockid, quant) VALUES("${stockId}", "${ind.id}", ${ind.qty})`
+        let q2 = `INSERT INTO stockProductInd(id, stockprodid, stockid, quant) VALUES("${uuidv4()}", "${stockId}", "${ind.id}", ${ind.qty})`
         db.run(q2, (err)=>{
           err ? console.log(err.message) : 0;
         })
       }
-      win.webContents.send("sucess-stock-entry-product")
+      win.webContents.send("success-stock-entry-product")
+      getStockData();
     }
   })
 }
 
 function validateStock(data){
   let db = new sqlite3.Database(databaseLocation)
-  let q = `SELECT st.barcode, st.quant, i.name as iName, sup.name as sName FROM stock st INNER JOIN ingredient i ON i.id = st.indid INNER JOIN supplier sup ON sup.id = st.supid WHERE st.deleted = 0 AND st.id = "${data.id}"`
+  let q = `SELECT st.barcode, st.quant, i.name as iName, sup.name as sName, IFNULL(SUM(spi.quant),0) as usedQty FROM stock st LEFT JOIN stockProductInd spi ON spi.stockid = st.id INNER JOIN ingredient i ON i.id = st.indid INNER JOIN supplier sup ON sup.id = st.supid WHERE st.deleted = 0 AND st.id = "${data.id}" GROUP BY st.id`
 
   db.all(q, (err, rows)=>{
     if(!err){
@@ -307,7 +361,8 @@ function validateStock(data){
         data.name = rows[0].iName
         data.supname = rows[0].sName
         data.barcode = rows[0].barcode
-        win.webContents.send("validate-stock",{"res" : ((rows[0].quant - data.deducted) >= data.qty), "data" : data})
+        let deduction = (rows[0].usedQty + data.deducted)
+        win.webContents.send("validate-stock",{"res" : ((rows[0].quant - deduction) >= data.qty), "data" : data})
         return
         }
       }
@@ -318,7 +373,7 @@ function validateStock(data){
 
 function stockIdSearch(data){
   let db = new sqlite3.Database(databaseLocation)
-  let q = `SELECT id, quant FROM stock WHERE id = "${data}" AND deleted = 0`
+  let q = `SELECT st.id, (st.quant-IFNULL(SUM(spi.quant),0)) as quant FROM stock st LEFT JOIN stockProductInd spi ON spi.stockid = st.id WHERE st.id = "${data}" AND st.deleted = 0 GROUP BY st.id`
 
   db.all(q, (err, rows)=>{
     if(!err){
@@ -329,7 +384,7 @@ function stockIdSearch(data){
 
 function barcodeSearch(data){
   let db = new sqlite3.Database(databaseLocation)
-  let q = `SELECT id, quant FROM stock WHERE barcode = "${data}" AND deleted = 0`
+  let q = `SELECT st.id, (st.quant-IFNULL(SUM(spi.quant),0)) as quant FROM stock st LEFT JOIN stockProductInd spi ON spi.stockid = st.id WHERE st.barcode = "${data}" AND st.deleted = 0 GROUP BY st.id`
 
   db.all(q, (err, rows)=>{
     if(!err){
@@ -342,7 +397,7 @@ function barcodeSearch(data){
 function getRecipeTemplate(id){
   let db = new sqlite3.Database(databaseLocation)
   let q = `SELECT i.id, i.name, ri.quant FROM recipeitem ri INNER JOIN ingredient i ON i.id = ri.indid WHERE ri.prodid = "${id}"`
-  let q2 = `SELECT st.id, st.quant, i.name, st.barcode FROM stock st INNER JOIN ingredient i ON i.id = st.indid WHERE st.deleted = 0`
+  let q2 = `SELECT st.id, (st.quant-IFNULL(SUM(spi.quant),0)) as quant, i.name, st.barcode FROM stock st LEFT JOIN stockProductInd spi ON spi.stockid = st.id INNER JOIN ingredient i ON i.id = st.indid WHERE st.deleted = 0 GROUP BY st.id`
 
   db.all(q, (err, rows)=>{
     let r = rows
@@ -480,9 +535,10 @@ function updateStockTable(){
 
   let sr = (stockSearchWord != "" && stockSearchWord != "out of date" ? `WHERE (ind.name LIKE "%${stockSearchWord}%" OR su.name LIKE "%${stockSearchWord}%" OR st.barcode LIKE "%${stockSearchWord}%") ${dsr}` : (stockSearchWord == "out of date" ? `WHERE CAST(st.bbefore as integer) < ${Date.now()} ${dsr}` : dsr))
 
-  let q = `SELECT st.id, su.name as supname, ind.name as indname, st.quant as qty, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
+  let q = `SELECT st.id, su.name as supname, ind.name as indname, (st.quant-IFNULL(SUM(spi.quant),0)) as qty, st.quant as qtyMax, st.barcode, st.bbefore, st.deleted  FROM 'stock' st 
+          LEFT JOIN stockProductInd spi ON spi.stockid = st.id
           INNER JOIN 'supplier' su ON su.id = st.supid 
-          INNER JOIN 'ingredient' ind on ind.id = st.indid ${sr}`
+          INNER JOIN 'ingredient' ind on ind.id = st.indid ${sr} GROUP BY st.id`
 
   //quantity will be changed when it is used eventually
 
@@ -673,6 +729,7 @@ function initData(){
   updateIndTable()
   updateStockTable()
   updateProductTable()
+  getStockData()
 }
 
 function logIn(data){

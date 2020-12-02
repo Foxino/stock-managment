@@ -64,10 +64,36 @@ if(true){
         ipc.on("validate-stock", (evt, data)=>{
             addStockIndToTable(data);
         })
-        ipc.on("sucess-stock-entry-product", ()=>{
+        ipc.on("success-stock-entry-product", ()=>{
             successProductInsert()
         })
+        ipc.on("updated-prod-stock", (evt, data)=>{
+            loadProdStockTable(data)
+        })
     })
+}
+
+function loadProdStockTable(data){
+    let r = document.getElementById("stockProdTable")
+
+    let t = "<table>"
+    t += "<tr><th>Best Before</th><th>Product</th><th>Barcode</th><th>Status</th></tr>"
+    for (let x = 0; x < data.length; x++) {
+        let row = data[x];
+        let bbefore = new Date(parseInt(row.bbefore))
+        t +=`<tr onclick='selectProd("${row.id}")' ><td>${bbefore.toLocaleDateString('en-GB')}</td><td>${row.name}</td><td>${row.barcode}</td><td>${row.status}</td></tr>`
+    }
+
+    t += "</table>"
+
+    r.innerHTML = t
+}
+
+function selectProd(id){
+    content(10)
+    let r = document.getElementById("prodData")
+    
+    r.innerHTML = id
 }
 
 function successProductInsert(){
@@ -420,7 +446,7 @@ function loadStockTable(data){
 
         let delBtn = (data[x].deleted === 0 ? `<button class="btn red" onclick='editStock("${data[x].id}", "deleted", 1)' ${removeper}>Delete</button>` : `<button class="btn green" onclick='editStock("${data[x].id}", "deleted", 0)'  ${removeper}>Reinstate</button>` )
         
-        table += `<tr ${delClass} ${ood} ><td>${data[x].indname}</td><td>${data[x].supname}</td><td>${data[x].qty}</td><td>${data[x].barcode}</td><td>${bbefore.toLocaleDateString('en-GB')}</td><td>${delBtn}</td></tr>`
+        table += `<tr ${delClass} ${ood} ><td>${data[x].indname}</td><td>${data[x].supname}</td><td>${data[x].qty}/${data[x].qtyMax}</td><td>${data[x].barcode}</td><td>${bbefore.toLocaleDateString('en-GB')}</td><td>${delBtn}</td></tr>`
     }
     table += "</table>"
     d.innerHTML = table
